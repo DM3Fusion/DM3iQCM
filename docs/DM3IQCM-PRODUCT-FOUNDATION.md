@@ -49,7 +49,7 @@ Requirements / Questions will eventually provide versioned, configurable prompts
 
 DM3iQCM-01 includes only the Supabase authentication boundary: browser/server clients, password sign-in, email-code request and verification, PKCE callback exchange, cookie-backed session refresh, protected application routes, safe redirects, and sign-out. The application requires `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`; credentials are never fabricated. Public responses to code requests do not reveal whether an account exists, and automatic account creation is disabled.
 
-The persistence milestone should introduce stable database identifiers, organization isolation, row-level authorization, transactional role caps, lifecycle constraints, task ownership, and server-derived timestamps. Authentication must then map identities to scoped user and organization memberships; authorization decisions must never depend only on hidden UI controls. Database migrations and policies should be reviewed and tested as permanent product infrastructure.
+DM3iQCM-02 introduces stable database identifiers, organization isolation, row-level authorization, transaction-safe role caps, lifecycle constraints, task ownership, and server-derived timestamps. Authentication resolves platform, internal organization, and external customer-portal access from public application records. Unprovisioned identities receive no tenant access. See `DM3IQCM-DATA-ARCHITECTURE.md` for the permanent model and deliberately deferred permission distinctions.
 
 ## Audit and event history
 

@@ -37,10 +37,23 @@ Configure `http://localhost:3003/auth/callback` as an allowed Supabase redirect 
 - `data/` — structured representative local records
 - `domain/` — permanent domain contracts and role policy
 - `lib/` — reusable selectors, metrics, progress, and formatting
+- `supabase/` — deterministic migrations, local configuration, and database tests
+- `types/` — Supabase-generated database contracts
 - `docs/` — product and architecture decisions
 
 ## Milestone status
 
 DM3iQCM-01 establishes the application shell, navigation, role/domain model, dashboard, case register and workspace, Service Desk foundation, sample data, future-module routes, and the Supabase authentication scaffold. Case persistence, dynamic questions/rules, messaging, and integrations are explicitly reserved for later milestones.
+
+DM3iQCM-02 establishes the permanent tenant schema, transactional role constraints, cross-tenant foreign-key integrity, RLS policies, profile/access resolution, derived progress and overdue database interfaces, append-oriented case activity, and generated Supabase types. The current operational UI remains fixture-backed pending repository integration in a later milestone.
+
+For local database validation (this resets only the local DM3iQCM stack):
+
+```bash
+supabase start
+npm run db:test
+```
+
+See [docs/DM3IQCM-DATA-ARCHITECTURE.md](docs/DM3IQCM-DATA-ARCHITECTURE.md) for architecture, policy boundaries, and the first-Super-Admin bootstrap procedure.
 
 See [docs/DM3IQCM-PRODUCT-FOUNDATION.md](docs/DM3IQCM-PRODUCT-FOUNDATION.md) for the permanent product foundation.

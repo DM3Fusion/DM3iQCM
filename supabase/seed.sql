@@ -1,0 +1,1 @@
+-- DM3iQCM-02 does not load UI fixtures into the permanent database.
