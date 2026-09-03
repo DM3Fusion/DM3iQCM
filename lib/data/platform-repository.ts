@@ -2,11 +2,13 @@ import { notFound } from "next/navigation";
 import { requireSuperAdmin } from "@/lib/auth/context";
 import { createClient } from "@/lib/supabase/server";
 import { classifyAccess } from "@/lib/data/user-provisioning";
+import { attachAvatarUrls, type ProfileWithAvatar } from "@/lib/data/avatar-urls";
 import type { Database } from "@/types/database.generated";
 type Tables = Database["public"]["Tables"];
 export type OrganizationRow = Tables["organizations"]["Row"];
 export type MembershipRow = Tables["organization_members"]["Row"];
 export type ProfileRow = Tables["profiles"]["Row"];
+export type AvatarProfileRow = ProfileWithAvatar<ProfileRow>;
 export interface OrganizationAdminRow extends OrganizationRow {
   activeUsers: number;
   businessOwners: number;
@@ -15,9 +17,9 @@ export interface OrganizationAdminRow extends OrganizationRow {
   customers: number;
 }
 export interface MemberAdminRow extends MembershipRow {
-  profile: ProfileRow;
+  profile: AvatarProfileRow;
 }
-export interface PlatformUserRow extends ProfileRow {
+export interface PlatformUserRow extends AvatarProfileRow {
   platformAdmin: boolean;
   memberships: {
     id: string;
@@ -77,10 +79,11 @@ async function loadPlatformData() {
     });
     throw new Error("Platform administration data is temporarily unavailable.");
   }
+  const hydratedProfiles = await attachAvatarUrls(supabase, profiles.data ?? []);
   return {
     organizations: organizations.data ?? [],
     memberships: memberships.data ?? [],
-    profiles: profiles.data ?? [],
+    profiles: hydratedProfiles,
     platformRoles: platformRoles.data ?? [],
     portalUsers: portalUsers.data ?? [],
     cases: cases.data ?? [],

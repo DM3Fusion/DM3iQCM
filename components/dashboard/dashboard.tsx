@@ -1,8 +1,172 @@
 import Link from "next/link";
 import type { LiveOrganizationData } from "@/lib/data/case-repository";
-import { displayName,initialsFor } from "@/lib/data/case-repository";
+import { displayName } from "@/lib/data/case-repository";
 import { formatActivity } from "@/lib/activity-format";
-import { getLiveDashboardMetrics,isLiveCaseActive,isLiveCaseOverdue } from "@/lib/live-dashboard-metrics";
+import {
+  getLiveDashboardMetrics,
+  isLiveCaseActive,
+  isLiveCaseOverdue,
+} from "@/lib/live-dashboard-metrics";
 import { formatRelativeDate } from "@/lib/format";
 import { CaseTable } from "@/components/cases/case-table";
-export function Dashboard({data}:{data:LiveOrganizationData}){const now=new Date();const metrics=getLiveDashboardMetrics(data.cases,now);const workload=data.staff.map(({profile})=>{const activeCaseIds=new Set(data.cases.filter(item=>isLiveCaseActive(item)&&(item.assignedStaff.some(user=>user.id===profile.id)||item.manager_user_id===profile.id)).map(item=>item.id));const tasks=data.cases.flatMap(item=>item.tasks).filter(task=>task.assigned_user_id===profile.id);return{profile,active:activeCaseIds.size,assigned:tasks.filter(t=>!['COMPLETED','NOT_APPLICABLE'].includes(t.status)).length,completed:tasks.filter(t=>t.status==='COMPLETED').length,overdue:tasks.filter(t=>t.due_at&&new Date(t.due_at)<now&&!['COMPLETED','NOT_APPLICABLE'].includes(t.status)).length};});const overdue=data.cases.filter(item=>isLiveCaseOverdue(item,now)).length;return <><div className="metric-grid">{metrics.map((m,i)=><article className={`metric tone-${m.tone}`} key={m.label}><div><span>{m.label}</span><strong>{m.value}</strong></div><span className="metric-icon">{["▤","◴","✓","○","!","◇","Ⅱ","⌁"][i]}</span><small>{m.label==="Overdue"?"Needs attention":m.label==="Due Soon"?"Next 3 calendar days":"Current caseload"}</small></article>)}</div><section className="panel"><div className="section-head"><div><h2>Case Workload</h2><p>Live active and recently updated cases</p></div><Link href="/cases">View all cases →</Link></div>{data.cases.length?<CaseTable items={data.cases.filter(isLiveCaseActive).slice(0,6)} compact/>:<div className="no-results">No cases yet. Create the first case to begin tracking work.</div>}</section><div className="dashboard-lower"><section className="panel"><div className="section-head"><div><h2>Staff Workload</h2><p>Live assignments and tasks by internal member</p></div></div>{workload.length?<div className="workload-list"><div className="workload-row heading"><span>Staff Member</span><span>Active Cases</span><span>Assigned Tasks</span><span>Completed</span><span>Overdue</span></div>{workload.map(item=><div className="workload-row" key={item.profile.id}><span className="staff-cell"><span className="avatar small">{initialsFor(item.profile)}</span><span><b>{displayName(item.profile)}</b><small>Internal organization member</small></span></span><b>{item.active}</b><b>{item.assigned}</b><b className="success-text">{item.completed}</b><b className={item.overdue?"danger-text":""}>{item.overdue}</b></div>)}</div>:<div className="no-results">No active internal staff members.</div>}</section><section className="panel"><div className="section-head"><div><h2>Recent Activity</h2><p>Latest live case events</p></div></div>{data.activities.length?<div className="activity-list">{data.activities.slice(0,8).map(activity=><article key={activity.id}><span className={`activity-dot ${activity.event_type.toLowerCase()}`}>{activity.event_type.includes("COMPLETED")?"✓":"•"}</span><div><p>{formatActivity(activity.event_type,activity.event_data)}</p><span>{activity.caseNumber} · {displayName(activity.actor)}</span></div><time>{formatRelativeDate(activity.created_at,now)}</time></article>)}</div>:<div className="no-results">No case activity yet.</div>}</section></div>{overdue?<div className="attention"><strong>{overdue} overdue {overdue===1?"case requires":"cases require"} attention</strong><Link href="/cases">Review case register →</Link></div>:null}</>}
+import { UserAvatar } from "@/components/user-avatar";
+export function Dashboard({ data }: { data: LiveOrganizationData }) {
+  const now = new Date();
+  const metrics = getLiveDashboardMetrics(data.cases, now);
+  const workload = data.staff.map(({ profile }) => {
+    const activeCaseIds = new Set(
+      data.cases
+        .filter(
+          (item) =>
+            isLiveCaseActive(item) &&
+            (item.assignedStaff.some((user) => user.id === profile.id) ||
+              item.manager_user_id === profile.id),
+        )
+        .map((item) => item.id),
+    );
+    const tasks = data.cases
+      .flatMap((item) => item.tasks)
+      .filter((task) => task.assigned_user_id === profile.id);
+    return {
+      profile,
+      active: activeCaseIds.size,
+      assigned: tasks.filter(
+        (t) => !["COMPLETED", "NOT_APPLICABLE"].includes(t.status),
+      ).length,
+      completed: tasks.filter((t) => t.status === "COMPLETED").length,
+      overdue: tasks.filter(
+        (t) =>
+          t.due_at &&
+          new Date(t.due_at) < now &&
+          !["COMPLETED", "NOT_APPLICABLE"].includes(t.status),
+      ).length,
+    };
+  });
+  const overdue = data.cases.filter((item) =>
+    isLiveCaseOverdue(item, now),
+  ).length;
+  return (
+    <>
+      <div className="metric-grid">
+        {metrics.map((m, i) => (
+          <article className={`metric tone-${m.tone}`} key={m.label}>
+            <div>
+              <span>{m.label}</span>
+              <strong>{m.value}</strong>
+            </div>
+            <span className="metric-icon">
+              {["▤", "◴", "✓", "○", "!", "◇", "Ⅱ", "⌁"][i]}
+            </span>
+            <small>
+              {m.label === "Overdue"
+                ? "Needs attention"
+                : m.label === "Due Soon"
+                  ? "Next 3 calendar days"
+                  : "Current caseload"}
+            </small>
+          </article>
+        ))}
+      </div>
+      <section className="panel">
+        <div className="section-head">
+          <div>
+            <h2>Case Workload</h2>
+            <p>Live active and recently updated cases</p>
+          </div>
+          <Link href="/cases">View all cases →</Link>
+        </div>
+        {data.cases.length ? (
+          <CaseTable
+            items={data.cases.filter(isLiveCaseActive).slice(0, 6)}
+            compact
+          />
+        ) : (
+          <div className="no-results">
+            No cases yet. Create the first case to begin tracking work.
+          </div>
+        )}
+      </section>
+      <div className="dashboard-lower">
+        <section className="panel">
+          <div className="section-head">
+            <div>
+              <h2>Staff Workload</h2>
+              <p>Live assignments and tasks by internal member</p>
+            </div>
+          </div>
+          {workload.length ? (
+            <div className="workload-list">
+              <div className="workload-row heading">
+                <span>Staff Member</span>
+                <span>Active Cases</span>
+                <span>Assigned Tasks</span>
+                <span>Completed</span>
+                <span>Overdue</span>
+              </div>
+              {workload.map((item) => (
+                <div className="workload-row" key={item.profile.id}>
+                  <span className="staff-cell">
+                    <UserAvatar displayName={displayName(item.profile)} email={item.profile.email} src={item.profile.avatarUrl} size="sm" />
+                    <span>
+                      <b>{displayName(item.profile)}</b>
+                      <small>Internal organization member</small>
+                    </span>
+                  </span>
+                  <b>{item.active}</b>
+                  <b>{item.assigned}</b>
+                  <b className="success-text">{item.completed}</b>
+                  <b className={item.overdue ? "danger-text" : ""}>
+                    {item.overdue}
+                  </b>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="no-results">No active internal staff members.</div>
+          )}
+        </section>
+        <section className="panel">
+          <div className="section-head">
+            <div>
+              <h2>Recent Activity</h2>
+              <p>Latest live case events</p>
+            </div>
+          </div>
+          {data.activities.length ? (
+            <div className="activity-list">
+              {data.activities.slice(0, 8).map((activity) => (
+                <article key={activity.id}>
+                  <span
+                    className={`activity-dot ${activity.event_type.toLowerCase()}`}
+                  >
+                    {activity.event_type.includes("COMPLETED") ? "✓" : "•"}
+                  </span>
+                  <div>
+                    <p>
+                      {formatActivity(activity.event_type, activity.event_data)}
+                    </p>
+                    <span>
+                      {activity.caseNumber} · {displayName(activity.actor)}
+                    </span>
+                  </div>
+                  <time>{formatRelativeDate(activity.created_at, now)}</time>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className="no-results">No case activity yet.</div>
+          )}
+        </section>
+      </div>
+      {overdue ? (
+        <div className="attention">
+          <strong>
+            {overdue} overdue{" "}
+            {overdue === 1 ? "case requires" : "cases require"} attention
+          </strong>
+          <Link href="/cases">Review case register →</Link>
+        </div>
+      ) : null}
+    </>
+  );
+}

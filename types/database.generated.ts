@@ -765,6 +765,8 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_path: string | null
+          avatar_updated_at: string | null
           created_at: string
           display_name: string | null
           email: string | null
@@ -776,6 +778,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          avatar_path?: string | null
+          avatar_updated_at?: string | null
           created_at?: string
           display_name?: string | null
           email?: string | null
@@ -787,6 +791,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          avatar_path?: string | null
+          avatar_updated_at?: string | null
           created_at?: string
           display_name?: string | null
           email?: string | null
@@ -1112,6 +1118,10 @@ export type Database = {
       }
     }
     Functions: {
+      set_own_avatar_path: {
+        Args: { target_avatar_path: string | null }
+        Returns: Database["public"]["Tables"]["profiles"]["Row"]
+      }
       can_access_case: {
         Args: {
           check_case_id: string

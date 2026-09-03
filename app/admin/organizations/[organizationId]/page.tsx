@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { NavigableRow } from "@/components/navigable-row";
+import { UserAvatar } from "@/components/user-avatar";
 import { PageHeader, Badge } from "@/components/ui";
 import {
   enterOrganizationWorkspaceAction,
@@ -181,17 +182,7 @@ export default async function Page({
                     label={`Open user ${m.profile.display_name || m.profile.email || "record"}`}
                   >
                     <td>
-                      <Link
-                        className="entity-row-link"
-                        href={`/admin/users/${m.user_id}`}
-                      >
-                        {m.profile.display_name ||
-                          m.profile.email ||
-                          "Unnamed user"}
-                      </Link>
-                      <small className="table-secondary">
-                        {m.profile.email}
-                      </small>
+                      <span className="user-identity-cell"><UserAvatar displayName={m.profile.display_name} email={m.profile.email} src={m.profile.avatarUrl} size="sm"/><span><Link className="entity-row-link" href={`/admin/users/${m.user_id}`}>{m.profile.display_name || m.profile.email || "Unnamed user"}</Link><small className="table-secondary">{m.profile.email}</small></span></span>
                     </td>
                     <td>{m.role.replaceAll("_", " ")}</td>
                     <td>

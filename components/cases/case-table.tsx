@@ -1,9 +1,10 @@
 import Link from "next/link";
 import type { LiveCase } from "@/lib/data/case-repository";
-import { displayName, initialsFor } from "@/lib/data/case-repository";
+import { displayName } from "@/lib/data/case-repository";
 import { formatDate } from "@/lib/format";
 import { Badge, ProgressBar } from "@/components/ui";
 import { NavigableRow } from "@/components/navigable-row";
+import { UserAvatar } from "@/components/user-avatar";
 export function CaseTable({
   items,
   compact = false,
@@ -56,13 +57,13 @@ export function CaseTable({
                 <div className="avatar-stack">
                   {item.assignedStaff.length ? (
                     item.assignedStaff.map((profile) => (
-                      <span
+                      <UserAvatar
                         key={profile.id}
-                        className="avatar mini"
-                        title={displayName(profile)}
-                      >
-                        {initialsFor(profile)}
-                      </span>
+                        displayName={displayName(profile)}
+                        email={profile.email}
+                        src={profile.avatarUrl}
+                        size="sm"
+                      />
                     ))
                   ) : (
                     <em>Unassigned</em>

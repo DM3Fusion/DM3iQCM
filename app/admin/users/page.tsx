@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Badge, PageHeader } from "@/components/ui";
 import { NavigableRow } from "@/components/navigable-row";
+import { UserAvatar } from "@/components/user-avatar";
 import { getPlatformAdministration } from "@/lib/data/platform-repository";
 
 export default async function Page() {
@@ -38,20 +39,7 @@ export default async function Page() {
                     label={`Open user ${user.display_name || user.email || "record"}`}
                   >
                     <td>
-                      <Link
-                        className="entity-row-link"
-                        href={`/admin/users/${user.id}`}
-                      >
-                        {user.display_name ||
-                          [user.first_name, user.last_name]
-                            .filter(Boolean)
-                            .join(" ") ||
-                          user.email ||
-                          "Unnamed user"}
-                      </Link>
-                      <small className="table-secondary">
-                        {user.email ?? "No email"}
-                      </small>
+                      <span className="user-identity-cell"><UserAvatar displayName={user.display_name} email={user.email} src={user.avatarUrl} size="sm"/><span><Link className="entity-row-link" href={`/admin/users/${user.id}`}>{user.display_name || [user.first_name, user.last_name].filter(Boolean).join(" ") || user.email || "Unnamed user"}</Link><small className="table-secondary">{user.email ?? "No email"}</small></span></span>
                     </td>
                     <td>
                       <Badge value={user.accessState} />

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { NavigableRow } from "@/components/navigable-row";
+import { UserAvatar } from "@/components/user-avatar";
 import { Badge, PageHeader } from "@/components/ui";
 import { getPlatformUser } from "@/lib/data/platform-repository";
 import {
@@ -53,8 +54,7 @@ export default async function Page({
         <section className="panel detail-section">
           <div className="section-head">
             <div>
-              <h2>Profile</h2>
-              <p>{user.email ?? "No email"}</p>
+              <span className="user-detail-identity"><UserAvatar displayName={user.display_name} email={user.email} src={user.avatarUrl} size="lg"/><span><h2>Profile</h2><p>User-level identity shared across organizations</p></span></span>
             </div>
             <Badge value={user.is_active ? "ACTIVE" : "INACTIVE"} />
           </div>

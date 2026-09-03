@@ -4,7 +4,6 @@ import { Badge, ProgressBar } from "@/components/ui";
 import {
   getLiveCase,
   displayName,
-  initialsFor,
 } from "@/lib/data/case-repository";
 import { getAccessContext } from "@/lib/auth/context";
 import { formatActivity } from "@/lib/activity-format";
@@ -17,6 +16,7 @@ import {
   transitionCaseStatusAction,
   updateTaskAction,
 } from "@/lib/data/case-actions";
+import { UserAvatar } from "@/components/user-avatar";
 import { getCaseQuestions } from "@/lib/data/question-repository";
 import { CaseQuestions } from "@/components/cases/case-questions";
 const statuses = [
@@ -399,7 +399,7 @@ export default async function Page({
             <div className="assigned-list">
               {item.manager ? (
                 <div>
-                  <span className="avatar">{initialsFor(item.manager)}</span>
+                  <UserAvatar displayName={displayName(item.manager)} email={item.manager.email} src={item.manager.avatarUrl} />
                   <span>
                     <b>{displayName(item.manager)}</b>
                     <small>Manager</small>
@@ -410,7 +410,7 @@ export default async function Page({
               )}
               {item.assignedStaff.map((profile) => (
                 <div key={profile.id}>
-                  <span className="avatar">{initialsFor(profile)}</span>
+                  <UserAvatar displayName={displayName(profile)} email={profile.email} src={profile.avatarUrl} />
                   <span>
                     <b>{displayName(profile)}</b>
                     <small>Staff</small>
