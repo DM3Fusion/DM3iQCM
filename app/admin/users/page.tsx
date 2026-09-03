@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Badge, PageHeader } from "@/components/ui";
+import { NavigableRow } from "@/components/navigable-row";
 import { getPlatformAdministration } from "@/lib/data/platform-repository";
 
 export default async function Page() {
@@ -27,21 +28,27 @@ export default async function Page() {
                   <th>Organizations / roles</th>
                   <th>Portal access</th>
                   <th>Profile</th>
-                  <th></th>
                 </tr>
               </thead>
               <tbody>
                 {users.map((user) => (
-                  <tr key={user.id}>
+                  <NavigableRow
+                    key={user.id}
+                    href={`/admin/users/${user.id}`}
+                    label={`Open user ${user.display_name || user.email || "record"}`}
+                  >
                     <td>
-                      <b>
+                      <Link
+                        className="entity-row-link"
+                        href={`/admin/users/${user.id}`}
+                      >
                         {user.display_name ||
                           [user.first_name, user.last_name]
                             .filter(Boolean)
                             .join(" ") ||
                           user.email ||
                           "Unnamed user"}
-                      </b>
+                      </Link>
                       <small className="table-secondary">
                         {user.email ?? "No email"}
                       </small>
@@ -64,15 +71,7 @@ export default async function Page() {
                     <td>
                       <Badge value={user.is_active ? "ACTIVE" : "INACTIVE"} />
                     </td>
-                    <td>
-                      <Link
-                        className="case-link"
-                        href={`/admin/users/${user.id}`}
-                      >
-                        Open →
-                      </Link>
-                    </td>
-                  </tr>
+                  </NavigableRow>
                 ))}
               </tbody>
             </table>

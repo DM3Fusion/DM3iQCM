@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { NavigableRow } from "@/components/navigable-row";
 import { Badge, PageHeader } from "@/components/ui";
 import { getPlatformUser } from "@/lib/data/platform-repository";
 import {
@@ -155,10 +156,14 @@ export default async function Page({
               </thead>
               <tbody>
                 {user.memberships.map((membership) => (
-                  <tr key={membership.id}>
+                  <NavigableRow
+                    key={membership.id}
+                    href={`/admin/organizations/${membership.organizationId}`}
+                    label={`Open organization ${membership.organizationName}`}
+                  >
                     <td>
                       <Link
-                        className="case-link"
+                        className="entity-row-link"
                         href={`/admin/organizations/${membership.organizationId}`}
                       >
                         {membership.organizationName}
@@ -201,7 +206,7 @@ export default async function Page({
                         <button>Save</button>
                       </form>
                     </td>
-                  </tr>
+                  </NavigableRow>
                 ))}
               </tbody>
             </table>

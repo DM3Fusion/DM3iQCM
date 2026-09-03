@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { NavigableRow } from "@/components/navigable-row";
 import { PageHeader, Badge } from "@/components/ui";
 import {
   enterOrganizationWorkspaceAction,
@@ -174,13 +175,20 @@ export default async function Page({
               </thead>
               <tbody>
                 {members.map((m) => (
-                  <tr key={m.id}>
+                  <NavigableRow
+                    key={m.id}
+                    href={`/admin/users/${m.user_id}`}
+                    label={`Open user ${m.profile.display_name || m.profile.email || "record"}`}
+                  >
                     <td>
-                      <b>
+                      <Link
+                        className="entity-row-link"
+                        href={`/admin/users/${m.user_id}`}
+                      >
                         {m.profile.display_name ||
                           m.profile.email ||
                           "Unnamed user"}
-                      </b>
+                      </Link>
                       <small className="table-secondary">
                         {m.profile.email}
                       </small>
@@ -218,7 +226,7 @@ export default async function Page({
                         <button>Save</button>
                       </form>
                     </td>
-                  </tr>
+                  </NavigableRow>
                 ))}
               </tbody>
             </table>
