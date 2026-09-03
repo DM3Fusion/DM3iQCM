@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { uploadOwnAvatarAction } from "@/lib/data/profile-actions";
 import {
   AVATAR_OUTPUT_SIZE,
@@ -80,6 +81,7 @@ async function optimizeAvatar(file: File): Promise<File> {
 }
 
 export function AvatarUploadForm() {
+  const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -115,7 +117,21 @@ export function AvatarUploadForm() {
       const formData = new FormData();
       formData.set("avatar", optimized);
 
-      await uploadOwnAvatarAction(formData);
+      const result = await uploadOwnAvatarAction(formData);
+
+      if (!result.ok) {
+        setError(result.error);
+        setProcessing(false);
+        return;
+      }
+
+      if (inputRef.current) {
+        inputRef.current.value = "";
+      }
+
+      router.replace("/account/profile");
+      router.refresh();
+      setProcessing(false);
     } catch (cause) {
       setError(
         cause instanceof Error

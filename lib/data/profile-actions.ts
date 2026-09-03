@@ -34,24 +34,46 @@ export async function uploadOwnAvatarAction(form: FormData) {
   const access = await requireAuthenticatedInternalUser();
   const entry = form.get("avatar");
 
-  if (!(entry instanceof File) || entry.size === 0)
-    return go("error", "Choose a JPEG, PNG, or WEBP image.");
+  if (!(entry instanceof File) || entry.size === 0) {
+    return {
+      ok: false as const,
+      error: "Choose a JPEG, PNG, or WEBP image.",
+    };
+  }
 
   const file = entry;
 
-  if (file.type !== "image/webp")
-    go("error", "Avatar must be submitted as an optimized WEBP image.");
-  if (file.size > MAX_AVATAR_BYTES)
-    go("error", "Optimized avatar must be 1 MB or smaller.");
+  if (file.type !== "image/webp") {
+    return {
+      ok: false as const,
+      error: "Avatar must be submitted as an optimized WEBP image.",
+    };
+  }
+
+  if (file.size > MAX_AVATAR_BYTES) {
+    return {
+      ok: false as const,
+      error: "Optimized avatar must be 1 MB or smaller.",
+    };
+  }
 
   const supabase = await createClient();
+
   const { data: current, error: readError } = await supabase
     .from("profiles")
     .select("avatar_path")
     .eq("id", access.user.id)
     .single();
-  if (readError) go("error", "Your profile could not be loaded.");
+
+  if (readError) {
+    return {
+      ok: false as const,
+      error: "Your profile could not be loaded.",
+    };
+  }
+
   const path = `${access.user.id}/avatar-${randomUUID()}.webp`;
+
   const { error: uploadError } = await supabase.storage
     .from(AVATAR_BUCKET)
     .upload(path, file, {
@@ -59,22 +81,47 @@ export async function uploadOwnAvatarAction(form: FormData) {
       contentType: file.type,
       upsert: false,
     });
-  if (uploadError) go("error", "The avatar upload failed.");
 
-  const { error: profileError } = await supabase.rpc("set_own_avatar_path", {
-    target_avatar_path: path,
-  });
-  if (profileError) {
-    await supabase.storage.from(AVATAR_BUCKET).remove([path]);
-    go("error", "The avatar could not be attached to your profile.");
+  if (uploadError) {
+    return {
+      ok: false as const,
+      error: "The avatar upload failed.",
+    };
   }
+
+  const { error: profileError } = await supabase.rpc(
+    "set_own_avatar_path",
+    {
+      target_avatar_path: path,
+    },
+  );
+
+  if (profileError) {
+    await supabase.storage
+      .from(AVATAR_BUCKET)
+      .remove([path]);
+
+    return {
+      ok: false as const,
+      error: "The avatar could not be attached to your profile.",
+    };
+  }
+
   if (
     current?.avatar_path &&
     isOwnedAvatarPath(current.avatar_path, access.user.id)
-  )
-    await supabase.storage.from(AVATAR_BUCKET).remove([current.avatar_path]);
+  ) {
+    await supabase.storage
+      .from(AVATAR_BUCKET)
+      .remove([current.avatar_path]);
+  }
+
   revalidatePath("/", "layout");
-  go("message", "Avatar updated.");
+
+  return {
+    ok: true as const,
+    message: "Avatar updated.",
+  };
 }
 
 export async function removeOwnAvatarAction() {
