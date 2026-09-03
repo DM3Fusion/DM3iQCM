@@ -7,6 +7,11 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.5"
+  }
   graphql_public: {
     Tables: {
       [_ in never]: never
@@ -168,6 +173,146 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "organization_members"
             referencedColumns: ["organization_id", "user_id"]
+          },
+        ]
+      }
+      case_question_responses: {
+        Row: {
+          case_id: string
+          case_question_id: string
+          created_at: string
+          id: string
+          organization_id: string
+          responded_by_user_id: string
+          response_value: Json
+          updated_at: string
+        }
+        Insert: {
+          case_id: string
+          case_question_id: string
+          created_at?: string
+          id?: string
+          organization_id: string
+          responded_by_user_id: string
+          response_value: Json
+          updated_at?: string
+        }
+        Update: {
+          case_id?: string
+          case_question_id?: string
+          created_at?: string
+          id?: string
+          organization_id?: string
+          responded_by_user_id?: string
+          response_value?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_question_responses_organization_id_case_id_fkey"
+            columns: ["organization_id", "case_id"]
+            isOneToOne: false
+            referencedRelation: "case_operational_status"
+            referencedColumns: ["organization_id", "id"]
+          },
+          {
+            foreignKeyName: "case_question_responses_organization_id_case_id_fkey"
+            columns: ["organization_id", "case_id"]
+            isOneToOne: false
+            referencedRelation: "case_progress"
+            referencedColumns: ["organization_id", "case_id"]
+          },
+          {
+            foreignKeyName: "case_question_responses_organization_id_case_id_fkey"
+            columns: ["organization_id", "case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["organization_id", "id"]
+          },
+          {
+            foreignKeyName: "case_question_responses_organization_id_case_question_id_fkey"
+            columns: ["organization_id", "case_question_id"]
+            isOneToOne: false
+            referencedRelation: "case_questions"
+            referencedColumns: ["organization_id", "id"]
+          },
+          {
+            foreignKeyName: "case_question_responses_responded_by_user_id_fkey"
+            columns: ["responded_by_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      case_questions: {
+        Row: {
+          case_id: string
+          created_at: string
+          description: string
+          display_order: number
+          id: string
+          options_snapshot: Json
+          organization_id: string
+          question_definition_id: string | null
+          question_text: string
+          required: boolean
+          response_type: Database["public"]["Enums"]["question_response_type"]
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          description?: string
+          display_order: number
+          id?: string
+          options_snapshot?: Json
+          organization_id: string
+          question_definition_id?: string | null
+          question_text: string
+          required: boolean
+          response_type: Database["public"]["Enums"]["question_response_type"]
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          description?: string
+          display_order?: number
+          id?: string
+          options_snapshot?: Json
+          organization_id?: string
+          question_definition_id?: string | null
+          question_text?: string
+          required?: boolean
+          response_type?: Database["public"]["Enums"]["question_response_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "case_questions_organization_id_case_id_fkey"
+            columns: ["organization_id", "case_id"]
+            isOneToOne: false
+            referencedRelation: "case_operational_status"
+            referencedColumns: ["organization_id", "id"]
+          },
+          {
+            foreignKeyName: "case_questions_organization_id_case_id_fkey"
+            columns: ["organization_id", "case_id"]
+            isOneToOne: false
+            referencedRelation: "case_progress"
+            referencedColumns: ["organization_id", "case_id"]
+          },
+          {
+            foreignKeyName: "case_questions_organization_id_case_id_fkey"
+            columns: ["organization_id", "case_id"]
+            isOneToOne: false
+            referencedRelation: "cases"
+            referencedColumns: ["organization_id", "id"]
+          },
+          {
+            foreignKeyName: "case_questions_organization_id_question_definition_id_fkey"
+            columns: ["organization_id", "question_definition_id"]
+            isOneToOne: false
+            referencedRelation: "question_definitions"
+            referencedColumns: ["organization_id", "id"]
           },
         ]
       }
@@ -654,6 +799,101 @@ export type Database = {
         }
         Relationships: []
       }
+      question_definitions: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by_user_id: string
+          description: string
+          display_order: number
+          id: string
+          organization_id: string
+          question_text: string
+          required: boolean
+          response_type: Database["public"]["Enums"]["question_response_type"]
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by_user_id: string
+          description?: string
+          display_order?: number
+          id?: string
+          organization_id: string
+          question_text: string
+          required?: boolean
+          response_type: Database["public"]["Enums"]["question_response_type"]
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by_user_id?: string
+          description?: string
+          display_order?: number
+          id?: string
+          organization_id?: string
+          question_text?: string
+          required?: boolean
+          response_type?: Database["public"]["Enums"]["question_response_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_definitions_created_by_user_id_fkey"
+            columns: ["created_by_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "question_definitions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      question_options: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          option_label: string
+          option_value: string
+          organization_id: string
+          question_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          option_label: string
+          option_value: string
+          organization_id: string
+          question_id: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          option_label?: string
+          option_value?: string
+          organization_id?: string
+          question_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "question_options_organization_id_question_id_fkey"
+            columns: ["organization_id", "question_id"]
+            isOneToOne: false
+            referencedRelation: "question_definitions"
+            referencedColumns: ["organization_id", "id"]
+          },
+        ]
+      }
       service_requests: {
         Row: {
           assigned_user_id: string | null
@@ -880,6 +1120,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      can_administer_questions: {
+        Args: { target_organization_id: string; target_user_id?: string }
+        Returns: boolean
+      }
       can_manage_case: {
         Args: { target_organization_id: string; target_user_id?: string }
         Returns: boolean
@@ -988,7 +1232,20 @@ export type Database = {
       }
       create_organization: {
         Args: { target_name: string; target_slug: string }
-        Returns: Database["public"]["Tables"]["organizations"]["Row"]
+        Returns: {
+          created_at: string
+          id: string
+          name: string
+          slug: string
+          status: Database["public"]["Enums"]["organization_status"]
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "organizations"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       delete_case_task: { Args: { target_task_id: string }; Returns: undefined }
       get_case_progress: {
@@ -1021,10 +1278,6 @@ export type Database = {
         Returns: boolean
       }
       is_super_admin: { Args: { check_user_id?: string }; Returns: boolean }
-      provision_organization_member: {
-        Args: { target_email: string; target_organization_id: string; target_role: Database["public"]["Enums"]["application_role"] }
-        Returns: Database["public"]["Tables"]["organization_members"]["Row"]
-      }
       is_valid_organization_actor: {
         Args: { target_organization_id: string; target_user_id: string }
         Returns: boolean
@@ -1040,6 +1293,80 @@ export type Database = {
       next_customer_number: {
         Args: { target_organization_id: string }
         Returns: string
+      }
+      provision_organization_member: {
+        Args: {
+          target_email: string
+          target_organization_id: string
+          target_role: Database["public"]["Enums"]["application_role"]
+        }
+        Returns: {
+          created_at: string
+          id: string
+          is_active: boolean
+          joined_at: string
+          organization_id: string
+          role: Database["public"]["Enums"]["application_role"]
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "organization_members"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      save_case_question_response: {
+        Args: { target_case_question_id: string; target_response_value: Json }
+        Returns: {
+          case_id: string
+          case_question_id: string
+          created_at: string
+          id: string
+          organization_id: string
+          responded_by_user_id: string
+          response_value: Json
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "case_question_responses"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      save_question_definition: {
+        Args: {
+          target_active: boolean
+          target_description: string
+          target_display_order: number
+          target_options?: Json
+          target_organization_id: string
+          target_question_id: string
+          target_question_text: string
+          target_required: boolean
+          target_response_type: Database["public"]["Enums"]["question_response_type"]
+        }
+        Returns: {
+          active: boolean
+          created_at: string
+          created_by_user_id: string
+          description: string
+          display_order: number
+          id: string
+          organization_id: string
+          question_text: string
+          required: boolean
+          response_type: Database["public"]["Enums"]["question_response_type"]
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "question_definitions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       set_case_assignment: {
         Args: {
@@ -1081,14 +1408,6 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      update_organization: {
-        Args: { target_name: string; target_organization_id: string; target_slug: string; target_status: Database["public"]["Enums"]["organization_status"] }
-        Returns: Database["public"]["Tables"]["organizations"]["Row"]
-      }
-      update_organization_membership: {
-        Args: { target_active: boolean; target_membership_id: string; target_role: Database["public"]["Enums"]["application_role"] }
-        Returns: Database["public"]["Tables"]["organization_members"]["Row"]
-      }
       update_case_task: {
         Args: {
           target_assigned_user_id: string
@@ -1119,6 +1438,51 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "case_tasks"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      update_organization: {
+        Args: {
+          target_name: string
+          target_organization_id: string
+          target_slug: string
+          target_status: Database["public"]["Enums"]["organization_status"]
+        }
+        Returns: {
+          created_at: string
+          id: string
+          name: string
+          slug: string
+          status: Database["public"]["Enums"]["organization_status"]
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "organizations"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      update_organization_membership: {
+        Args: {
+          target_active: boolean
+          target_membership_id: string
+          target_role: Database["public"]["Enums"]["application_role"]
+        }
+        Returns: {
+          created_at: string
+          id: string
+          is_active: boolean
+          joined_at: string
+          organization_id: string
+          role: Database["public"]["Enums"]["application_role"]
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "organization_members"
           isOneToOne: true
           isSetofReturn: false
         }
@@ -1163,6 +1527,14 @@ export type Database = {
       customer_type: "INDIVIDUAL" | "BUSINESS" | "ORGANIZATION"
       organization_status: "ACTIVE" | "SUSPENDED" | "ARCHIVED"
       priority_level: "LOW" | "NORMAL" | "HIGH" | "URGENT"
+      question_response_type:
+        | "TEXT"
+        | "LONG_TEXT"
+        | "YES_NO"
+        | "SINGLE_SELECT"
+        | "MULTI_SELECT"
+        | "DATE"
+        | "NUMBER"
       service_request_status:
         | "NEW"
         | "OPEN"
@@ -1185,12 +1557,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1214,11 +1586,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1239,11 +1611,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1264,11 +1636,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1281,11 +1653,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1331,6 +1703,15 @@ export const Constants = {
       customer_type: ["INDIVIDUAL", "BUSINESS", "ORGANIZATION"],
       organization_status: ["ACTIVE", "SUSPENDED", "ARCHIVED"],
       priority_level: ["LOW", "NORMAL", "HIGH", "URGENT"],
+      question_response_type: [
+        "TEXT",
+        "LONG_TEXT",
+        "YES_NO",
+        "SINGLE_SELECT",
+        "MULTI_SELECT",
+        "DATE",
+        "NUMBER",
+      ],
       service_request_status: [
         "NEW",
         "OPEN",
