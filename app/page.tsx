@@ -1,3 +1,5 @@
 import { Dashboard } from "@/components/dashboard/dashboard";
 import { PageHeader } from "@/components/ui";
-export default function Page(){return <><PageHeader eyebrow="Thursday, September 3" title="Good morning, Maya" description="Here’s what needs your team’s attention today." action={<button className="primary-button">＋ New Case</button>}/><Dashboard/></>}
+import Link from "next/link";
+import { getLiveOrganizationData } from "@/lib/data/case-repository";
+export default async function Page(){const data=await getLiveOrganizationData();return <><PageHeader eyebrow="Operations" title="Dashboard" description="Live casework requiring your organization’s attention." action={<Link className="primary-button" href="/cases/new">＋ New Case</Link>}/><Dashboard data={data}/></>}

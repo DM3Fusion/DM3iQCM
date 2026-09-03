@@ -73,11 +73,11 @@ SECURITY DEFINER helpers use a fixed empty `search_path`, schema-qualified objec
 - Staff Users see cases, tasks, assignments, and activity only when actively assigned to the case.
 - Portal users can see only their linked customer and that customer’s service requests. Internal memberships, cases, tasks, and activity are deliberately not exposed in DM3iQCM-02.
 
-Finer distinctions between Owner and Admin, field-level controls, controlled activity emission RPCs, portal case-summary projections, and suspended-organization handling are deferred until their workflows are specified. The current policy favors isolation and least privilege.
+DM3iQCM-03 adds controlled activity emission through transactional workflow RPCs, revokes direct authenticated writes to core case/task/assignment/activity records, and expands Staff User case visibility only when the user has a direct active assignment or an assigned task. Finer distinctions between Owner and Admin, portal case-summary projections, and suspended-organization handling remain deferred. The current policy favors isolation and least privilege.
 
 ## Fixture transition and generated types
 
-DM3iQCM-01 UI routes still import `data/sample-data.ts`. These records are explicit presentation fixtures and are not seeded into production tables. Later milestones should introduce server repositories that return domain view models from typed Supabase queries, then replace route reads incrementally without changing presentation components.
+The DM3iQCM-03 dashboard, case register/workspace, assignments, tasks, activity, and customer register use typed Supabase repositories. `data/sample-data.ts` remains only for the explicitly deferred Service Desk presentation. Fixture records are never seeded into production tables.
 
 `types/database.generated.ts` is generated from the applied schema with `supabase gen types typescript --local`; it must be regenerated after schema changes, never hand-edited.
 

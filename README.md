@@ -47,6 +47,8 @@ DM3iQCM-01 establishes the application shell, navigation, role/domain model, das
 
 DM3iQCM-02 establishes the permanent tenant schema, transactional role constraints, cross-tenant foreign-key integrity, RLS policies, profile/access resolution, derived progress and overdue database interfaces, append-oriented case activity, and generated Supabase types. The current operational UI remains fixture-backed pending repository integration in a later milestone.
 
+DM3iQCM-03 replaces core fixtures with live, active-organization Supabase operations for the dashboard, case register, case creation/workspace, assignments, task CRUD/reordering, status transitions, completion safeguards, activity, and customers. Service Desk alone remains a presentation fixture until the customer-service milestone.
+
 For local database validation (this resets only the local DM3iQCM stack):
 
 ```bash
@@ -55,5 +57,7 @@ npm run db:test
 ```
 
 See [docs/DM3IQCM-DATA-ARCHITECTURE.md](docs/DM3IQCM-DATA-ARCHITECTURE.md) for architecture, policy boundaries, and the first-Super-Admin bootstrap procedure.
+
+See [docs/DM3IQCM-CASE-WORKFLOW.md](docs/DM3IQCM-CASE-WORKFLOW.md) for the live workflow, authorization matrix, metrics, and transactional RPC behavior.
 
 See [docs/DM3IQCM-PRODUCT-FOUNDATION.md](docs/DM3IQCM-PRODUCT-FOUNDATION.md) for the permanent product foundation.

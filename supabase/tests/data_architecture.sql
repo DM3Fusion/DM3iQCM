@@ -82,7 +82,7 @@ insert into public.service_requests(organization_id,request_number,customer_id,r
 
 set local role authenticated; select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000009',true);
 select pg_temp.assert_true((select count(*)=5 from public.cases),'Organization A manager sees only Organization A cases');
-do $$ declare affected integer; begin update public.cases set title='blocked' where id='30000000-0000-0000-0000-000000000002'; get diagnostics affected=row_count; perform pg_temp.assert_true(affected=0,'Organization A cannot modify Organization B case'); end $$;
+do $$ declare affected integer; begin begin update public.cases set title='blocked' where id='30000000-0000-0000-0000-000000000002';get diagnostics affected=row_count;perform pg_temp.assert_true(affected=0,'Organization A cannot modify Organization B case');exception when insufficient_privilege then null;end;end $$;
 reset role;
 set local role authenticated; select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000011',true);
 select pg_temp.assert_true((select count(*)=1 from public.cases),'Organization B manager cannot read Organization A cases');

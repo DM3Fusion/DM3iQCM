@@ -51,6 +51,8 @@ DM3iQCM-01 includes only the Supabase authentication boundary: browser/server cl
 
 DM3iQCM-02 introduces stable database identifiers, organization isolation, row-level authorization, transaction-safe role caps, lifecycle constraints, task ownership, and server-derived timestamps. Authentication resolves platform, internal organization, and external customer-portal access from public application records. Unprovisioned identities receive no tenant access. See `DM3IQCM-DATA-ARCHITECTURE.md` for the permanent model and deliberately deferred permission distinctions.
 
+DM3iQCM-03 activates the internal Customer → Case → Assignment → Tasks → Progress → Review → Completion workflow with live organization-scoped queries and transactional PostgreSQL mutations. The temporary required-task completion guard is intentionally designed for later extension by the Question/Response rules engine.
+
 ## Audit and event history
 
 `CaseActivity` establishes the view-model for an append-only event history. Future persistence should record actor, organization, entity, event type, timestamp, structured before/after context where appropriate, and correlation metadata. Events should be append-only and written in the same transaction as the change they describe. Sensitive values require explicit redaction and retention policy. Customer communication events may reference Service Requests while operational events reference Cases, preserving the domain boundary.

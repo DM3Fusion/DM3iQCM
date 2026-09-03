@@ -64,11 +64,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "case_activity_organization_id_actor_user_id_fkey"
-            columns: ["organization_id", "actor_user_id"]
+            foreignKeyName: "case_activity_actor_user_id_fkey"
+            columns: ["actor_user_id"]
             isOneToOne: false
-            referencedRelation: "organization_members"
-            referencedColumns: ["organization_id", "user_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "case_activity_organization_id_case_id_fkey"
@@ -135,11 +135,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "case_assignments_organization_id_assigned_by_user_id_fkey"
-            columns: ["organization_id", "assigned_by_user_id"]
+            foreignKeyName: "case_assignments_assigned_by_user_id_fkey"
+            columns: ["assigned_by_user_id"]
             isOneToOne: false
-            referencedRelation: "organization_members"
-            referencedColumns: ["organization_id", "user_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "case_assignments_organization_id_case_id_fkey"
@@ -225,6 +225,20 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "case_tasks_completed_by_user_id_fkey"
+            columns: ["completed_by_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "case_tasks_created_by_user_id_fkey"
+            columns: ["created_by_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "case_tasks_organization_id_assigned_user_id_fkey"
             columns: ["organization_id", "assigned_user_id"]
             isOneToOne: false
@@ -251,20 +265,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "cases"
             referencedColumns: ["organization_id", "id"]
-          },
-          {
-            foreignKeyName: "case_tasks_organization_id_completed_by_user_id_fkey"
-            columns: ["organization_id", "completed_by_user_id"]
-            isOneToOne: false
-            referencedRelation: "organization_members"
-            referencedColumns: ["organization_id", "user_id"]
-          },
-          {
-            foreignKeyName: "case_tasks_organization_id_created_by_user_id_fkey"
-            columns: ["organization_id", "created_by_user_id"]
-            isOneToOne: false
-            referencedRelation: "organization_members"
-            referencedColumns: ["organization_id", "user_id"]
           },
         ]
       }
@@ -328,11 +328,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "cases_organization_id_created_by_user_id_fkey"
-            columns: ["organization_id", "created_by_user_id"]
+            foreignKeyName: "cases_created_by_user_id_fkey"
+            columns: ["created_by_user_id"]
             isOneToOne: false
-            referencedRelation: "organization_members"
-            referencedColumns: ["organization_id", "user_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "cases_organization_id_customer_id_fkey"
@@ -447,11 +447,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "customers_organization_id_created_by_user_id_fkey"
-            columns: ["organization_id", "created_by_user_id"]
+            foreignKeyName: "customers_created_by_user_id_fkey"
+            columns: ["created_by_user_id"]
             isOneToOne: false
-            referencedRelation: "organization_members"
-            referencedColumns: ["organization_id", "user_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "customers_organization_id_fkey"
@@ -478,6 +478,29 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "organization_case_number_counters_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: true
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organization_customer_number_counters: {
+        Row: {
+          next_number: number
+          organization_id: string
+        }
+        Insert: {
+          next_number?: number
+          organization_id: string
+        }
+        Update: {
+          next_number?: number
+          organization_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_customer_number_counters_organization_id_fkey"
             columns: ["organization_id"]
             isOneToOne: true
             referencedRelation: "organizations"
@@ -799,11 +822,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "cases_organization_id_created_by_user_id_fkey"
-            columns: ["organization_id", "created_by_user_id"]
+            foreignKeyName: "cases_created_by_user_id_fkey"
+            columns: ["created_by_user_id"]
             isOneToOne: false
-            referencedRelation: "organization_members"
-            referencedColumns: ["organization_id", "user_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "cases_organization_id_customer_id_fkey"
@@ -857,6 +880,113 @@ export type Database = {
         }
         Returns: boolean
       }
+      can_manage_case: {
+        Args: { target_organization_id: string; target_user_id?: string }
+        Returns: boolean
+      }
+      create_case_task: {
+        Args: {
+          target_assigned_user_id?: string
+          target_case_id: string
+          target_description?: string
+          target_due_at?: string
+          target_required?: boolean
+          target_title: string
+        }
+        Returns: {
+          assigned_user_id: string | null
+          case_id: string
+          completed_at: string | null
+          completed_by_user_id: string | null
+          created_at: string
+          created_by_user_id: string
+          description: string
+          due_at: string | null
+          id: string
+          organization_id: string
+          required: boolean
+          sequence: number
+          status: Database["public"]["Enums"]["case_task_status"]
+          title: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "case_tasks"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      create_case_workflow: {
+        Args: {
+          target_case_type: string
+          target_customer_id: string
+          target_description: string
+          target_due_at?: string
+          target_initial_tasks?: Json
+          target_manager_user_id?: string
+          target_organization_id: string
+          target_priority: Database["public"]["Enums"]["priority_level"]
+          target_staff_user_ids?: string[]
+          target_title: string
+        }
+        Returns: {
+          case_number: string
+          case_type: string
+          closed_at: string | null
+          completed_at: string | null
+          created_at: string
+          created_by_user_id: string
+          customer_id: string
+          description: string
+          due_at: string | null
+          id: string
+          manager_user_id: string | null
+          opened_at: string
+          organization_id: string
+          priority: Database["public"]["Enums"]["priority_level"]
+          status: Database["public"]["Enums"]["case_status"]
+          title: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "cases"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      create_customer_record: {
+        Args: {
+          target_email?: string
+          target_name: string
+          target_notes?: string
+          target_organization_id: string
+          target_phone?: string
+          target_type: Database["public"]["Enums"]["customer_type"]
+        }
+        Returns: {
+          created_at: string
+          created_by_user_id: string | null
+          customer_number: string
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          organization_id: string
+          phone: string | null
+          status: Database["public"]["Enums"]["customer_status"]
+          type: Database["public"]["Enums"]["customer_type"]
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "customers"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      delete_case_task: { Args: { target_task_id: string }; Returns: undefined }
       get_case_progress: {
         Args: { target_case_id: string }
         Returns: {
@@ -887,8 +1017,104 @@ export type Database = {
         Returns: boolean
       }
       is_super_admin: { Args: { check_user_id?: string }; Returns: boolean }
+      is_valid_organization_actor: {
+        Args: { target_organization_id: string; target_user_id: string }
+        Returns: boolean
+      }
+      move_case_task: {
+        Args: { target_direction: string; target_task_id: string }
+        Returns: undefined
+      }
       next_case_number: {
         Args: { target_organization_id: string }
+        Returns: string
+      }
+      next_customer_number: {
+        Args: { target_organization_id: string }
+        Returns: string
+      }
+      set_case_assignment: {
+        Args: {
+          target_active?: boolean
+          target_assignment_role: Database["public"]["Enums"]["assignment_role"]
+          target_case_id: string
+          target_user_id: string
+        }
+        Returns: undefined
+      }
+      transition_case_status: {
+        Args: {
+          target_case_id: string
+          target_status: Database["public"]["Enums"]["case_status"]
+        }
+        Returns: {
+          case_number: string
+          case_type: string
+          closed_at: string | null
+          completed_at: string | null
+          created_at: string
+          created_by_user_id: string
+          customer_id: string
+          description: string
+          due_at: string | null
+          id: string
+          manager_user_id: string | null
+          opened_at: string
+          organization_id: string
+          priority: Database["public"]["Enums"]["priority_level"]
+          status: Database["public"]["Enums"]["case_status"]
+          title: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "cases"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      update_case_task: {
+        Args: {
+          target_assigned_user_id: string
+          target_description: string
+          target_due_at: string
+          target_required: boolean
+          target_status: Database["public"]["Enums"]["case_task_status"]
+          target_task_id: string
+          target_title: string
+        }
+        Returns: {
+          assigned_user_id: string | null
+          case_id: string
+          completed_at: string | null
+          completed_by_user_id: string | null
+          created_at: string
+          created_by_user_id: string
+          description: string
+          due_at: string | null
+          id: string
+          organization_id: string
+          required: boolean
+          sequence: number
+          status: Database["public"]["Enums"]["case_task_status"]
+          title: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "case_tasks"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      write_case_event: {
+        Args: {
+          target_actor_id: string
+          target_case_id: string
+          target_event_data?: Json
+          target_event_type: string
+          target_organization_id: string
+        }
         Returns: string
       }
     }
