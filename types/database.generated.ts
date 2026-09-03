@@ -986,6 +986,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      create_organization: {
+        Args: { target_name: string; target_slug: string }
+        Returns: Database["public"]["Tables"]["organizations"]["Row"]
+      }
       delete_case_task: { Args: { target_task_id: string }; Returns: undefined }
       get_case_progress: {
         Args: { target_case_id: string }
@@ -1017,6 +1021,10 @@ export type Database = {
         Returns: boolean
       }
       is_super_admin: { Args: { check_user_id?: string }; Returns: boolean }
+      provision_organization_member: {
+        Args: { target_email: string; target_organization_id: string; target_role: Database["public"]["Enums"]["application_role"] }
+        Returns: Database["public"]["Tables"]["organization_members"]["Row"]
+      }
       is_valid_organization_actor: {
         Args: { target_organization_id: string; target_user_id: string }
         Returns: boolean
@@ -1072,6 +1080,14 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      update_organization: {
+        Args: { target_name: string; target_organization_id: string; target_slug: string; target_status: Database["public"]["Enums"]["organization_status"] }
+        Returns: Database["public"]["Tables"]["organizations"]["Row"]
+      }
+      update_organization_membership: {
+        Args: { target_active: boolean; target_membership_id: string; target_role: Database["public"]["Enums"]["application_role"] }
+        Returns: Database["public"]["Tables"]["organization_members"]["Row"]
       }
       update_case_task: {
         Args: {
@@ -1326,4 +1342,3 @@ export const Constants = {
     },
   },
 } as const
-

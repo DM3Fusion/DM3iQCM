@@ -1,31 +1,13 @@
-import { redirect } from "next/navigation";
-import { getAccessContext } from "@/lib/auth/context";
+import { notFound } from "next/navigation";
+import { requireSuperAdmin } from "@/lib/auth/context";
 import { createClient } from "@/lib/supabase/server";
-
-export interface PlatformSummary {
-  organizations: number;
-  activeOrganizations: number;
-  platformAdministrators: number;
-}
-
-export async function getPlatformSummary(): Promise<PlatformSummary> {
-  const access = await getAccessContext();
-  if (!access?.isSuperAdmin) redirect("/account/unprovisioned");
-
-  const supabase = await createClient();
-  const [organizations, activeOrganizations, platformAdministrators] = await Promise.all([
-    supabase.from("organizations").select("id", { count: "exact", head: true }),
-    supabase.from("organizations").select("id", { count: "exact", head: true }).eq("status", "ACTIVE"),
-    supabase.from("platform_user_roles").select("id", { count: "exact", head: true }).eq("role", "SUPER_ADMIN").eq("is_active", true),
-  ]);
-  const error = organizations.error ?? activeOrganizations.error ?? platformAdministrators.error;
-  if (error) {
-    console.error("Platform summary query failed", { code: error.code, message: error.message });
-    throw new Error("Platform administration data is temporarily unavailable.");
-  }
-  return {
-    organizations: organizations.count ?? 0,
-    activeOrganizations: activeOrganizations.count ?? 0,
-    platformAdministrators: platformAdministrators.count ?? 0,
-  };
-}
+import type { Database } from "@/types/database.generated";
+type Tables=Database["public"]["Tables"];export type OrganizationRow=Tables["organizations"]["Row"];export type MembershipRow=Tables["organization_members"]["Row"];export type ProfileRow=Tables["profiles"]["Row"];
+export interface OrganizationAdminRow extends OrganizationRow{activeUsers:number;businessOwners:number;businessAdmins:number;openCases:number;customers:number}
+export interface MemberAdminRow extends MembershipRow{profile:ProfileRow}
+export interface PlatformUserRow extends ProfileRow{platformAdmin:boolean;memberships:{organizationId:string;organizationName:string;role:string;active:boolean}[];portalAccess:number;accessState:"Platform Admin"|"Organization User"|"Customer Portal User"|"Pending Access"}
+export interface PlatformSummary{organizations:number;activeOrganizations:number;inactiveOrganizations:number;platformAdministrators:number;organizationUsers:number;pendingProvisioning:number}
+async function loadPlatformData(){await requireSuperAdmin();const supabase=await createClient();const [organizations,memberships,profiles,platformRoles,portalUsers,cases,customers]=await Promise.all([supabase.from("organizations").select("*").order("name"),supabase.from("organization_members").select("*"),supabase.from("profiles").select("*").order("display_name"),supabase.from("platform_user_roles").select("*"),supabase.from("customer_portal_users").select("*"),supabase.from("cases").select("id,organization_id,status"),supabase.from("customers").select("id,organization_id")]);const error=organizations.error??memberships.error??profiles.error??platformRoles.error??portalUsers.error??cases.error??customers.error;if(error){console.error("Platform administration query failed",{code:error.code,message:error.message});throw new Error("Platform administration data is temporarily unavailable.")}return{organizations:organizations.data??[],memberships:memberships.data??[],profiles:profiles.data??[],platformRoles:platformRoles.data??[],portalUsers:portalUsers.data??[],cases:cases.data??[],customers:customers.data??[]}}
+export async function getPlatformAdministration(){const data=await loadPlatformData();const organizations:OrganizationAdminRow[]=data.organizations.map(org=>{const members=data.memberships.filter(m=>m.organization_id===org.id&&m.is_active);return{...org,activeUsers:members.length,businessOwners:members.filter(m=>m.role==="BUSINESS_OWNER").length,businessAdmins:members.filter(m=>m.role==="BUSINESS_ADMIN").length,openCases:data.cases.filter(c=>c.organization_id===org.id&&!['COMPLETED','CLOSED','CANCELLED'].includes(c.status)).length,customers:data.customers.filter(c=>c.organization_id===org.id).length}});const users:PlatformUserRow[]=data.profiles.map(profile=>{const memberships=data.memberships.filter(m=>m.user_id===profile.id).map(m=>({organizationId:m.organization_id,organizationName:data.organizations.find(o=>o.id===m.organization_id)?.name??"Unknown organization",role:m.role,active:m.is_active}));const platformAdmin=data.platformRoles.some(r=>r.user_id===profile.id&&r.is_active);const portalAccess=data.portalUsers.filter(p=>p.user_id===profile.id&&p.is_active).length;return{...profile,platformAdmin,memberships,portalAccess,accessState:platformAdmin?"Platform Admin":memberships.some(m=>m.active)?"Organization User":portalAccess?"Customer Portal User":"Pending Access"}});return{organizations,users,summary:{organizations:organizations.length,activeOrganizations:organizations.filter(o=>o.status==="ACTIVE").length,inactiveOrganizations:organizations.filter(o=>o.status!=="ACTIVE").length,platformAdministrators:data.platformRoles.filter(r=>r.role==="SUPER_ADMIN"&&r.is_active).length,organizationUsers:new Set(data.memberships.filter(m=>m.is_active).map(m=>m.user_id)).size,pendingProvisioning:users.filter(u=>u.accessState==="Pending Access").length} satisfies PlatformSummary}}
+export async function getPlatformSummary(){return(await getPlatformAdministration()).summary}
+export async function getOrganizationAdministration(id:string){const data=await getPlatformAdministration();const organization=data.organizations.find(o=>o.id===id);if(!organization)notFound();const base=await loadPlatformData();const members:MemberAdminRow[]=base.memberships.filter(m=>m.organization_id===id).flatMap(m=>{const profile=base.profiles.find(p=>p.id===m.user_id);return profile?[{...m,profile}]:[]});return{organization,members}}

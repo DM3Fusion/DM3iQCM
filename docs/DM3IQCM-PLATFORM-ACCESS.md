@@ -8,7 +8,7 @@ An authenticated, active Super Admin is provisioned for internal platform access
 
 The Back Office uses live data allowed by existing Super Admin RLS policies. It does not issue case, customer, task, assignment, or activity queries. If no organizations exist, it shows an explicit platform empty state.
 
-When active organizations exist, `getAccessContext()` continues to expose all active organizations to the Super Admin. The active-organization cookie selects a permitted organization; absent a valid cookie, the existing first-active-organization behavior applies. Entering this context enables the existing organization workspace without changing membership records.
+When active organizations exist, `getAccessContext()` continues to expose all active organizations to the Super Admin. The active-organization cookie selects a permitted organization; absent a valid cookie, the existing first-active-organization behavior applies. An explicit platform sentinel supports a stable Back Office return even after organizations exist. Entering an organization context enables the existing workspace without changing membership records.
 
 ## Tenant boundary
 
