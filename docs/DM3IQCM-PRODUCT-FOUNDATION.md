@@ -2,7 +2,7 @@
 
 ## Purpose and workflow
 
-DM3iQCM™ is the Case Management Intelligence application in the DM3iQ™ brand family. It is an independent codebase from DM3iQ Business Decision Intelligence and is designed as an extensible operational system, not a demonstration.
+DM3iQCM is the internal codebase identifier for **DM3iQ™ — Case Management Intelligence**. The subtitle distinguishes it from DM3iQ™ — Business Decision Intelligence. It is an independent codebase designed as an extensible operational system, not a demonstration.
 
 The master workflow is:
 
@@ -45,9 +45,11 @@ It also returns completed, total, and remaining required task counts. With no ap
 
 Requirements / Questions will eventually provide versioned, configurable prompts, typed customer/staff responses, conditional visibility, validation, and completion rules. Rules should be evaluated by a domain service against an immutable definition version associated with each case. This milestone reserves the navigation and workspace surfaces without prematurely encoding that engine.
 
-## Future authentication and database requirements
+## Authentication foundation and future database requirements
 
-The persistence milestone should introduce stable database identifiers, organization isolation, row-level authorization, transactional role caps, lifecycle constraints, task ownership, and server-derived timestamps. Authentication must map identities to scoped user and organization memberships; authorization decisions must never depend only on hidden UI controls. Database migrations and policies should be reviewed and tested as permanent product infrastructure.
+DM3iQCM-01 includes only the Supabase authentication boundary: browser/server clients, password sign-in, email-code request and verification, PKCE callback exchange, cookie-backed session refresh, protected application routes, safe redirects, and sign-out. The application requires `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`; credentials are never fabricated. Public responses to code requests do not reveal whether an account exists, and automatic account creation is disabled.
+
+The persistence milestone should introduce stable database identifiers, organization isolation, row-level authorization, transactional role caps, lifecycle constraints, task ownership, and server-derived timestamps. Authentication must then map identities to scoped user and organization memberships; authorization decisions must never depend only on hidden UI controls. Database migrations and policies should be reviewed and tested as permanent product infrastructure.
 
 ## Audit and event history
 
@@ -55,4 +57,4 @@ The persistence milestone should introduce stable database identifiers, organiza
 
 ## Deferred capabilities
 
-DM3iQCM-01 intentionally does not implement Supabase, authentication, dynamic questions/rules, messaging, email, attachments, or external integrations. The application routes and workspace placeholders define where those capabilities can be added without replacing this foundation.
+DM3iQCM-01 intentionally does not implement a case-management database, tenant RLS for cases or tasks, dynamic questions/rules, messaging, email, attachments, or external integrations. The Supabase usage is limited to authentication. Application routes and workspace placeholders define where later capabilities can be added without replacing this foundation.

@@ -1,0 +1,4 @@
+import { type NextRequest, NextResponse } from "next/server";
+import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
+import { safeInternalPath } from "@/lib/auth/redirects";
+export async function GET(request:NextRequest){if(!isSupabaseConfigured())return NextResponse.redirect(new URL("/login?error=Supabase%20environment%20variables%20are%20not%20configured.",request.url));const url=new URL(request.url);const code=url.searchParams.get("code");const next=safeInternalPath(url.searchParams.get("next"));if(code){const supabase=await createClient();const {error}=await supabase.auth.exchangeCodeForSession(code);if(error)return NextResponse.redirect(new URL("/login?error=The%20sign-in%20link%20is%20invalid%20or%20has%20expired.",request.url));}return NextResponse.redirect(new URL(next,request.url));}
