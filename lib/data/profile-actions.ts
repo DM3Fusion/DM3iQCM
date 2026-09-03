@@ -97,6 +97,15 @@ export async function uploadOwnAvatarAction(form: FormData) {
   );
 
   if (profileError) {
+    console.error("DM3iQCM avatar profile RPC failed", {
+      code: profileError.code,
+      message: profileError.message,
+      details: profileError.details,
+      hint: profileError.hint,
+      userId: access.user.id,
+      avatarPath: path,
+    });
+
     await supabase.storage
       .from(AVATAR_BUCKET)
       .remove([path]);
