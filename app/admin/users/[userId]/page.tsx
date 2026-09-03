@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { NavigableRow } from "@/components/navigable-row";
 import { UserAvatar } from "@/components/user-avatar";
+import { getAccessContext } from "@/lib/auth/context";
 import { Badge, PageHeader } from "@/components/ui";
 import { getPlatformUser } from "@/lib/data/platform-repository";
 import {
@@ -24,7 +25,12 @@ export default async function Page({
   searchParams: Promise<{ message?: string; error?: string }>;
 }) {
   const [{ userId }, query] = await Promise.all([params, searchParams]);
-  const { user, organizations } = await getPlatformUser(userId);
+  const [{ user, organizations }, access] = await Promise.all([
+    getPlatformUser(userId),
+    getAccessContext(),
+  ]);
+
+  const isOwnProfile = access?.user.id === user.id;
   const activeOrganizations = organizations.filter(
     (organization) =>
       organization.status === "ACTIVE" &&
@@ -54,7 +60,33 @@ export default async function Page({
         <section className="panel detail-section">
           <div className="section-head">
             <div>
-              <span className="user-detail-identity"><UserAvatar displayName={user.display_name} email={user.email} src={user.avatarUrl} size="lg"/><span><h2>Profile</h2><p>User-level identity shared across organizations</p></span></span>
+              <span className="user-detail-identity">
+                {isOwnProfile ? (
+                  <Link
+                    href="/account/profile"
+                    aria-label="Open My Profile"
+                    className="avatar-profile-link"
+                  >
+                    <UserAvatar
+                      displayName={user.display_name}
+                      email={user.email}
+                      src={user.avatarUrl}
+                      size="lg"
+                    />
+                  </Link>
+                ) : (
+                  <UserAvatar
+                    displayName={user.display_name}
+                    email={user.email}
+                    src={user.avatarUrl}
+                    size="lg"
+                  />
+                )}
+                <span>
+                  <h2>Profile</h2>
+                  <p>User-level identity shared across organizations</p>
+                </span>
+              </span>
             </div>
             <Badge value={user.is_active ? "ACTIVE" : "INACTIVE"} />
           </div>

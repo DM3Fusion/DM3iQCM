@@ -111,7 +111,17 @@ export function AppShell({
           <span>{platformContext ? "Platform" : "Organization"}</span>
           {!platformContext && org ? (
             <div>
-              <UserAvatar displayName={access?.displayName} email={access?.user.email} src={access?.avatarUrl} />
+              <Link
+                href="/account/profile"
+                aria-label="Open My Profile"
+                className="avatar-profile-link"
+              >
+                <UserAvatar
+                  displayName={access?.displayName}
+                  email={access?.user.email}
+                  src={access?.avatarUrl}
+                />
+              </Link>
               <div className="organization-details">
                 {access && access.organizations.length > 1 ? (
                   <form action={selectActiveOrganizationAction}>
@@ -139,7 +149,17 @@ export function AppShell({
             </div>
           ) : platformContext ? (
             <div>
-              <UserAvatar displayName={access?.displayName} email={access?.user.email} src={access?.avatarUrl} />
+              <Link
+                href="/account/profile"
+                aria-label="Open My Profile"
+                className="avatar-profile-link"
+              >
+                <UserAvatar
+                  displayName={access?.displayName}
+                  email={access?.user.email}
+                  src={access?.avatarUrl}
+                />
+              </Link>
               <div className="organization-details">
                 <strong>DM3iQ Administration</strong>
                 <small>SUPER ADMIN</small>
