@@ -1,0 +1,1 @@
+import { EmptyFoundation, PageHeader } from "@/components/ui"; export default function Page(){return <><PageHeader eyebrow="Insights" title="Reports" description="Operational reporting across cases, customers, and staff work."/><EmptyFoundation icon="↗" title="Reporting foundation is ready" description="Saved reports, performance trends, and exports will be built here."/></>}

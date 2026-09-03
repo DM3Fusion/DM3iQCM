@@ -1,0 +1,8 @@
+import Link from "next/link";
+import { cases, caseTasks, customers, users } from "@/data/sample-data";
+import type { Case } from "@/domain/models";
+import { calculateCaseProgress } from "@/lib/case-progress";
+import { customerFor, fullName, tasksForCase, userFor } from "@/lib/case-selectors";
+import { formatDate } from "@/lib/format";
+import { Badge, ProgressBar } from "@/components/ui";
+export function CaseTable({items=cases,compact=false}:{items?:Case[];compact?:boolean}) { return <div className="table-scroll"><table className={compact?"compact-table":""}><thead><tr><th>Case Number</th><th>Customer</th><th>Case</th>{!compact&&<th>Case Type</th>}<th>Status</th><th>Priority</th>{!compact&&<th>Manager</th>}<th>Assigned Staff</th><th>Progress</th><th>Due Date</th></tr></thead><tbody>{items.map(item=>{const progress=calculateCaseProgress(tasksForCase(item.id,caseTasks)); return <tr key={item.id}><td><Link className="case-link" href={`/cases/${item.id}`}>{item.caseNumber}</Link></td><td>{customerFor(item,customers)?.name}</td><td><Link className="title-link" href={`/cases/${item.id}`}>{item.title}</Link></td>{!compact&&<td>{item.caseType}</td>}<td><Badge value={item.status}/></td><td><Badge value={item.priority}/></td>{!compact&&<td>{fullName(userFor(item.managerUserId,users))}</td>}<td><div className="avatar-stack">{item.assignedUserIds.length?item.assignedUserIds.map(id=><span key={id} className="avatar mini" title={fullName(userFor(id,users))}>{userFor(id,users)?.firstName[0]}{userFor(id,users)?.lastName[0]}</span>):<em>Unassigned</em>}</div></td><td><ProgressBar percentage={progress.percentage} compact/></td><td>{formatDate(item.dueAt)}</td></tr>})}</tbody></table></div> }

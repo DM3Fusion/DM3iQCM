@@ -1,0 +1,6 @@
+import type { CaseStatus, CaseTaskStatus, Priority, ServiceRequestStatus } from "@/domain/models";
+import { humanize } from "@/lib/format";
+export function PageHeader({eyebrow,title,description,action}:{eyebrow?:string;title:string;description:string;action?:React.ReactNode}) { return <div className="page-header"><div>{eyebrow&&<span className="eyebrow">{eyebrow}</span>}<h1>{title}</h1><p>{description}</p></div>{action}</div> }
+export function Badge({value}:{value:CaseStatus|CaseTaskStatus|Priority|ServiceRequestStatus}) { return <span className={`badge badge-${value.toLowerCase().replaceAll("_","-")}`}>{humanize(value)}</span> }
+export function ProgressBar({percentage,compact=false}:{percentage:number;compact?:boolean}) { return <div className={`progress-wrap ${compact?"compact":""}`}><div className="progress-track"><span style={{width:`${percentage}%`}}/></div><b>{percentage}%</b></div> }
+export function EmptyFoundation({title,description,icon}:{title:string;description:string;icon:string}) { return <section className="panel empty"><span className="empty-icon">{icon}</span><h2>{title}</h2><p>{description}</p><span className="foundation-tag">Foundation established · Planned for a future milestone</span></section> }

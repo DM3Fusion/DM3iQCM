@@ -1,0 +1,1 @@
+import { EmptyFoundation, PageHeader } from "@/components/ui"; export default function Page(){return <><PageHeader eyebrow="Staff Work" title="Tasks" description="Coordinate assignments and work across the team."/><EmptyFoundation icon="✓" title="Task workspace is ready" description="Team queues, personal assignments, and workload planning will be added here."/></>}
