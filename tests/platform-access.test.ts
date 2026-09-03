@@ -1,0 +1,8 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { hasTenantInternalAccess, resolveRootExperience } from "../lib/auth/access-routing.ts";
+test("SUPER_ADMIN with no organizations receives the platform Back Office",()=>{const access={isSuperAdmin:true,internalAccess:true,provisioned:true,hasActiveOrganization:false};assert.equal(access.provisioned,true);assert.equal(access.internalAccess,true);assert.equal(resolveRootExperience(access),"PLATFORM");assert.equal(hasTenantInternalAccess({...access,activeOrganization:null}),false)});
+test("SUPER_ADMIN with an active organization receives its workspace",()=>{const access={isSuperAdmin:true,internalAccess:true,provisioned:true,hasActiveOrganization:true};assert.equal(resolveRootExperience(access),"ORGANIZATION");assert.equal(hasTenantInternalAccess({...access,activeOrganization:{id:"organization-id"}}),true)});
+test("a normal organization member retains the operational dashboard",()=>{const access={isSuperAdmin:false,internalAccess:true,provisioned:true,hasActiveOrganization:true};assert.equal(resolveRootExperience(access),"ORGANIZATION")});
+test("an authenticated user without provisioning remains Access pending",()=>{const access={isSuperAdmin:false,internalAccess:false,provisioned:false,hasActiveOrganization:false};assert.equal(resolveRootExperience(access),"UNPROVISIONED")});
+test("tenant data access always requires an active organization",()=>{assert.equal(hasTenantInternalAccess({internalAccess:true,activeOrganization:null}),false);assert.equal(hasTenantInternalAccess(null),false)});

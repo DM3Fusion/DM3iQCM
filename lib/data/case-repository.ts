@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getAccessContext } from "@/lib/auth/context";
+import { hasTenantInternalAccess } from "@/lib/auth/access-routing";
 import type { Database } from "@/types/database.generated";
 type Tables=Database["public"]["Tables"];
 export type CaseRow=Tables["cases"]["Row"];
@@ -15,7 +16,7 @@ export interface StaffMember{membership:MemberRow;profile:ProfileRow}
 export interface LiveOrganizationData{organizationId:string;cases:LiveCase[];customers:CustomerRow[];staff:StaffMember[];activities:(ActivityRow&{actor:ProfileRow|null;caseNumber:string})[]}
 export class DataAccessError extends Error{constructor(message="Case-management data is temporarily unavailable."){super(message);this.name="DataAccessError"}}
 const progressFor=(tasks:TaskRow[])=>{const applicable=tasks.filter(task=>task.required&&task.status!=="NOT_APPLICABLE");const completed=applicable.filter(task=>task.status==="COMPLETED").length;return{percentage:applicable.length?Math.round(completed/applicable.length*100):0,completedRequiredTasks:completed,totalRequiredTasks:applicable.length,remainingRequiredTasks:applicable.length-completed};};
-export async function getLiveOrganizationData():Promise<LiveOrganizationData>{const access=await getAccessContext();if(!access?.internalAccess||!access.activeOrganization)redirect("/account/unprovisioned");const organizationId=access.activeOrganization.id;const supabase=await createClient();const [caseResult,customerResult,assignmentResult,taskResult,memberResult,activityResult]=await Promise.all([
+export async function getLiveOrganizationData():Promise<LiveOrganizationData>{const access=await getAccessContext();if(access?.isSuperAdmin&&!access.activeOrganization)redirect("/");if(!hasTenantInternalAccess(access)||!access?.activeOrganization)redirect("/account/unprovisioned");const organizationId=access.activeOrganization.id;const supabase=await createClient();const [caseResult,customerResult,assignmentResult,taskResult,memberResult,activityResult]=await Promise.all([
  supabase.from("cases").select("*").eq("organization_id",organizationId).order("updated_at",{ascending:false}),
  supabase.from("customers").select("*").eq("organization_id",organizationId).order("name"),
  supabase.from("case_assignments").select("*").eq("organization_id",organizationId).eq("is_active",true),
