@@ -1,4 +1,5 @@
 export const AVATAR_BUCKET = "user-avatars";
+export const AVATAR_SOURCE_BUCKET = "user-avatar-sources";
 
 export const AVATAR_OUTPUT_SIZE = 512;
 export const AVATAR_WEBP_QUALITY = 0.82;
@@ -28,5 +29,11 @@ export function avatarInitials(
 export function isOwnedAvatarPath(path: string, userId: string) {
   return new RegExp(
     `^${userId}/avatar-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\\.webp$`,
+  ).test(path);
+}
+
+export function isOwnedAvatarSourcePath(path: string, userId: string) {
+  return new RegExp(
+    `^${userId}/source-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\\.(jpg|jpeg|png|webp)$`,
   ).test(path);
 }
