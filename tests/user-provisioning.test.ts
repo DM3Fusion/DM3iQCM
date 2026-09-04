@@ -69,12 +69,16 @@ test("Admin Auth credential is server-only and actions require SUPER_ADMIN", () 
 test("SUPER_ADMIN identity updates Auth email before synchronizing the profile", () => {
   const actions = readFileSync("lib/data/user-invitation-actions.ts", "utf8");
   const page = readFileSync("app/admin/users/[userId]/page.tsx", "utf8");
+  const form = readFileSync("components/platform-identity-form.tsx", "utf8");
   assert.match(actions, /updateUserById\(userId, \{ email \}\)/);
   assert.match(actions, /Auth email updated but profile synchronization failed/);
   assert.match(actions, /\.ilike\("email", email\)/);
   assert.match(actions, /email,\n      is_active/);
-  assert.match(page, /name="email"/);
-  assert.match(page, /Save identity/);
+  assert.match(page, /PlatformIdentityForm/);
+  assert.match(form, /name="email"/);
+  assert.match(form, /Save identity/);
+  assert.match(form, /Changes Saved/);
+  assert.match(form, /license-save-button/);
 });
 
 test("password and email-code login paths remain available", () => {

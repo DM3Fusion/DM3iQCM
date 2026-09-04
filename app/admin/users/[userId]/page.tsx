@@ -3,12 +3,11 @@ import { NavigableRow } from "@/components/navigable-row";
 import { UserAvatar } from "@/components/user-avatar";
 import { getAccessContext } from "@/lib/auth/context";
 import { Badge, PageHeader } from "@/components/ui";
-import { ResendInviteButton } from "@/components/resend-invite-button";
+import { PlatformIdentityForm } from "@/components/platform-identity-form";
 import { getPlatformUser } from "@/lib/data/platform-repository";
 import {
   addUserMembershipAction,
   updateUserMembershipAction,
-  updateUserProfileAction,
   getInvitationEligibility,
 } from "@/lib/data/user-invitation-actions";
 
@@ -93,39 +92,11 @@ export default async function Page({
             </div>
             <Badge value={user.is_active ? "ACTIVE" : "INACTIVE"} />
           </div>
-          <form action={updateUserProfileAction} className="entity-form">
-            <input type="hidden" name="userId" value={user.id} />
-            <div className="form-grid">
-              <label>
-                <span>Display name</span>
-                <input
-                  name="displayName"
-                  defaultValue={user.display_name ?? ""}
-                  required
-                />
-              </label>
-              <label>
-                <span>Email</span>
-                <input
-                  name="email"
-                  type="email"
-                  defaultValue={user.email ?? ""}
-                  required
-                />
-              </label>
-              <label>
-                <span>Profile state</span>
-                <select name="active" defaultValue={String(user.is_active)}>
-                  <option value="true">Active</option>
-                  <option value="false">Inactive</option>
-                </select>
-              </label>
-            </div>
-            <div className="form-actions">
-              <button className="primary-button">Save identity</button>
-              {invitationEligible ? <ResendInviteButton userId={user.id} /> : null}
-            </div>
-          </form>
+          <PlatformIdentityForm
+            userId={user.id}
+            identity={{ displayName: user.display_name ?? "", email: user.email ?? "", active: user.is_active }}
+            invitationEligible={invitationEligible}
+          />
         </section>
         <aside className="panel detail-section admin-summary">
           <h2>Access summary</h2>

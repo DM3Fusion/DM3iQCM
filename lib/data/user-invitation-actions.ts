@@ -234,12 +234,13 @@ export async function getInvitationEligibility(userId: string, organizationId?: 
   try { const admin = createAdminClient(); const { data, error } = await admin.auth.admin.getUserById(userId); const user = data?.user; return !error && Boolean(user?.email) && !user?.email_confirmed_at && !user?.last_sign_in_at; } catch { return false; }
 }
 export async function updateUserProfileAction(form: FormData) {
-  await requireSuperAdmin();
+  try { await requireSuperAdmin(); } catch { return { ok: false as const, error: "You are not authorized to edit user identities." }; }
   const userId = value(form, "userId");
   const email = value(form, "email").toLowerCase();
   if (!userId || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))
-    go(`/admin/users/${userId}`, "error", "Enter a valid email address.");
-  const admin = adminClient(`/admin/users/${userId}`);
+    return { ok: false as const, error: "Enter a valid email address." };
+  let admin: ReturnType<typeof createAdminClient>;
+  try { admin = createAdminClient(); } catch { return { ok: false as const, error: "User administration is not configured." }; }
   const { data: duplicate } = await admin
     .from("profiles")
     .select("id")
@@ -247,11 +248,7 @@ export async function updateUserProfileAction(form: FormData) {
     .neq("id", userId)
     .maybeSingle();
   if (duplicate)
-    go(
-      `/admin/users/${userId}`,
-      "error",
-      "A user with this email already exists.",
-    );
+    return { ok: false as const, error: "A user with this email already exists." };
   const { data: authUser, error: authError } =
     await admin.auth.admin.updateUserById(userId, { email });
   if (authError || !authUser.user) {
@@ -260,13 +257,7 @@ export async function updateUserProfileAction(form: FormData) {
       message: authError?.message,
       userId,
     });
-    go(
-      `/admin/users/${userId}`,
-      "error",
-      authError?.message.toLowerCase().includes("already")
-        ? "A user with this email already exists."
-        : "The Auth email could not be updated.",
-    );
+    return { ok: false as const, error: authError?.message.toLowerCase().includes("already") ? "A user with this email already exists." : "The Auth email could not be updated." };
   }
   const { error: profileError } = await admin
     .from("profiles")
@@ -284,14 +275,10 @@ export async function updateUserProfileAction(form: FormData) {
       hint: profileError.hint,
       userId,
     });
-    go(
-      `/admin/users/${userId}`,
-      "error",
-      "Auth email updated, but the application profile could not be synchronized. Contact support.",
-    );
+    return { ok: false as const, error: "Auth email updated, but the application profile could not be synchronized. Contact support." };
   }
   revalidatePath("/admin/users");
-  redirect(`/admin/users/${userId}?message=User%20identity%20updated.`);
+  return { ok: true as const };
 }
 export async function addUserMembershipAction(form: FormData) {
   await requireSuperAdmin();
