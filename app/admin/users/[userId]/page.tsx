@@ -3,11 +3,13 @@ import { NavigableRow } from "@/components/navigable-row";
 import { UserAvatar } from "@/components/user-avatar";
 import { getAccessContext } from "@/lib/auth/context";
 import { Badge, PageHeader } from "@/components/ui";
+import { ResendInviteButton } from "@/components/resend-invite-button";
 import { getPlatformUser } from "@/lib/data/platform-repository";
 import {
   addUserMembershipAction,
   updateUserMembershipAction,
   updateUserProfileAction,
+  getInvitationEligibility,
 } from "@/lib/data/user-invitation-actions";
 
 const roles = [
@@ -29,6 +31,7 @@ export default async function Page({
     getPlatformUser(userId),
     getAccessContext(),
   ]);
+  const invitationEligible = await getInvitationEligibility(user.id);
 
   const isOwnProfile = access?.user.id === user.id;
   const activeOrganizations = organizations.filter(
@@ -120,6 +123,7 @@ export default async function Page({
             </div>
             <div className="form-actions">
               <button className="primary-button">Save identity</button>
+              {invitationEligible ? <ResendInviteButton userId={user.id} /> : null}
             </div>
           </form>
         </section>

@@ -1,7 +1,7 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { requireSuperAdmin } from "@/lib/auth/context";
+import { requireSuperAdmin, getAccessContext } from "@/lib/auth/context";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient, getInvitationRedirect } from "@/lib/supabase/admin";
 import { isOrganizationUserRole } from "@/lib/data/user-provisioning";
@@ -203,6 +203,34 @@ export async function inviteUserAction(form: FormData) {
   redirect(
     `/admin/users/${userId}?message=${encodeURIComponent(sendInvitation ? "User invited." : "User created.")}`,
   );
+}
+
+export async function resendUserInviteAction(form: FormData) {
+  const targetUserId = value(form, "userId");
+  const organizationId = value(form, "organizationId");
+  const access = await getAccessContext();
+  if (!access?.user) return { ok: false, error: "You are not authorized to resend invitations." };
+  const isPlatformAdmin = access.isSuperAdmin;
+  const membership = organizationId ? access.organizations.find((org) => org.id === organizationId) : null;
+  const orgAdmin = membership && ["BUSINESS_OWNER", "BUSINESS_ADMIN"].includes(membership.role);
+  if (!isPlatformAdmin && !orgAdmin) return { ok: false, error: "You are not authorized to resend invitations." };
+  const admin = adminClient("/admin/users");
+  const { data: target, error: lookupError } = await admin.auth.admin.getUserById(targetUserId);
+  const targetUser = target?.user;
+  if (lookupError || !targetUser?.email) return { ok: false, error: "The invitation could not be resent." };
+  if (targetUser.email_confirmed_at || targetUser.last_sign_in_at) return { ok: false, error: "This user has already completed account activation." };
+  if (!isPlatformAdmin && organizationId) {
+    const session = await createClient();
+    const { data: member } = await session.from("organization_members").select("id").eq("organization_id", organizationId).eq("user_id", targetUserId).maybeSingle();
+    if (!member) return { ok: false, error: "You are not authorized to resend invitations." };
+  }
+  const { error } = await admin.auth.admin.inviteUserByEmail(targetUser.email, { redirectTo: getInvitationRedirect(), data: targetUser.user_metadata });
+  if (error) { console.error("Invitation resend failed", { code: error.code, message: error.message }); return { ok: false, error: "Unable to resend invitation." }; }
+  return { ok: true };
+}
+export async function getInvitationEligibility(userId: string) {
+  await requireSuperAdmin();
+  try { const admin = createAdminClient(); const { data, error } = await admin.auth.admin.getUserById(userId); const user = data?.user; return !error && Boolean(user?.email) && !user?.email_confirmed_at && !user?.last_sign_in_at; } catch { return false; }
 }
 export async function updateUserProfileAction(form: FormData) {
   await requireSuperAdmin();
