@@ -45,3 +45,4 @@ test("summary drilldown rows preserve full-width button layout",()=>{
   assert.match(css, /summary-drilldown-row\{[^}]*justify-content:space-between/);
   assert.match(css, /summary-drilldown-row:hover/);
 });
+test("portal-only sessions pass middleware access gating",()=>{const source=readFileSync("proxy.ts","utf8");assert.match(source,/from\("customer_portal_users"\)/);assert.match(source,/!portal\.data\?\.length/);});
