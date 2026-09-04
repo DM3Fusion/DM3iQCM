@@ -68,7 +68,12 @@ async function loadPlatformData() {
     supabase.from("cases").select("id,organization_id,status"),
     supabase.from("customers").select("id,organization_id"),
   ]);
-  const { data: licenses } = await (supabase as any).from("organization_licenses").select("*").eq("is_current", true);
+  const licenseQuery = await (supabase as any).from("organization_licenses").select("*").eq("is_current", true).order("created_at", { ascending: false });
+  if (licenseQuery.error) {
+    console.error("License administration query failed", { code: licenseQuery.error.code, message: licenseQuery.error.message });
+    throw new Error("License administration data is temporarily unavailable.");
+  }
+  const licenses = licenseQuery.data;
   const error =
     organizations.error ??
     memberships.error ??

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { effectiveLicense, daysRemaining, LICENSE_WARNING_DAYS, organizationLicenseAccessAllowed } from "../lib/licensing.ts";
+import { effectiveLicense, daysRemaining, LICENSE_WARNING_DAYS, organizationLicenseAccessAllowed, formatDateTimeLocal } from "../lib/licensing.ts";
 import { readFileSync } from "node:fs";
 const now = new Date("2026-01-01T00:00:00Z");
 const base = { status: "ACTIVE" as const, commercialState: "PAID" as const, startsAt: null, expiresAt: "2026-01-11T00:00:00Z", graceEndsAt: "2026-01-15T00:00:00Z" };
@@ -10,5 +10,7 @@ test("notice thresholds are prepared for 06B", () => assert.deepEqual(LICENSE_WA
 test("missing license is rollout-compatible but not a commercial state", () => { assert.equal(organizationLicenseAccessAllowed("ACTIVE", null), true); assert.equal(effectiveLicense(null).workspaceAllowed, false); });
 test("organization lifecycle takes precedence and SUPER_ADMIN remains allowed", () => { const blocked = effectiveLicense({ ...base, status: "SUSPENDED" }); assert.equal(organizationLicenseAccessAllowed("SUSPENDED", blocked), false); assert.equal(organizationLicenseAccessAllowed("ARCHIVED", blocked), false); assert.equal(organizationLicenseAccessAllowed("ARCHIVED", blocked, true), true); });
 test("license mutation is audited, transactional, and current-row constrained", () => { const sql = readFileSync("supabase/migrations/20260904070000_dm3iqcm_licensing.sql", "utf8"); assert.match(sql, /organization_licenses_one_current/); assert.match(sql, /organization_license_events/); assert.match(sql, /not public\.is_super_admin/); assert.match(sql, /expiration precedes start/); assert.match(sql, /grace precedes expiration/); });
+test("database timestamps round-trip to datetime-local values", () => { assert.equal(formatDateTimeLocal("2026-09-04T16:00:00.000Z"), "2026-09-04T16:00"); assert.equal(formatDateTimeLocal(null), ""); });
+test("successful save requires authoritative read-back", () => { const action=readFileSync("lib/data/license-actions.ts", "utf8"); assert.match(action, /write could not be verified/); assert.match(action, /is_current/); });
 test("license plan is a controlled select with approved values", () => { const form = readFileSync("components/license-form.tsx", "utf8"); assert.match(form, /name=\"planCode\"/); for (const plan of ["STANDARD","ENTERPRISE","INTERNAL"]) assert.match(form, new RegExp(plan)); });
 test("organization avatar upload is exposed once in the top action row", () => { const page = readFileSync("app/admin/organizations/[organizationId]/page.tsx", "utf8"); assert.match(page, /showRemove=\{false\}/); assert.match(page, /showUpload=\{false\}/); });

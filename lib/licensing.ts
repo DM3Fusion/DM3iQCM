@@ -4,6 +4,7 @@ export type LicenseStatus = "TRIAL" | "ACTIVE" | "EXPIRING" | "EXPIRED" | "SUSPE
 export type CommercialState = "TRIAL" | "PAID" | "UNPAID" | "COMP" | "INTERNAL";
 export type LicenseSnapshot = { status: LicenseStatus; commercialState: CommercialState; startsAt: string | null; expiresAt: string | null; graceEndsAt: string | null; noticeDays?: number; notificationThresholds?: readonly number[]; };
 export function daysRemaining(expiresAt: string | null, now = new Date()) { if (!expiresAt) return null; return Math.ceil((new Date(expiresAt).getTime() - now.getTime()) / 86400000); }
+export function formatDateTimeLocal(value: string | null | undefined) { if (!value) return ""; const date = new Date(value); if (Number.isNaN(date.getTime())) return ""; return date.toISOString().slice(0, 16); }
 export function effectiveLicense(snapshot: LicenseSnapshot | null, now = new Date()) {
   if (!snapshot) return { status: "EXPIRED" as LicenseStatus, daysRemaining: null, isInGrace: false, workspaceAllowed: false };
   const days = daysRemaining(snapshot.expiresAt, now);
