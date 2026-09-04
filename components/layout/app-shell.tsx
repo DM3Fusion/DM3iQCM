@@ -42,8 +42,7 @@ const platformNav = [
 ];
 const isPublic = (path: string) =>
   path === "/login" ||
-  path.startsWith("/auth/") ||
-  path === "/account/unprovisioned";
+  path.startsWith("/auth/");
 export function AppShell({
   children,
   access,
@@ -59,7 +58,11 @@ export function AppShell({
   const platformContext = Boolean(
     access?.isSuperAdmin && (!org || pathname.startsWith("/admin")),
   );
-  const nav = platformContext ? platformNav : organizationNav;
+  const nav = platformContext
+    ? platformNav
+    : access?.internalAccess
+      ? organizationNav
+      : [];
   return (
     <div className="app-frame">
       {open && (

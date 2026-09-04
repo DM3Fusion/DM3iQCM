@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "node:test";
 import { hasTenantInternalAccess, resolveRootExperience } from "../lib/auth/access-routing.ts";
 test("SUPER_ADMIN with no organizations receives the platform Back Office",()=>{const access={isSuperAdmin:true,internalAccess:true,provisioned:true,hasActiveOrganization:false};assert.equal(access.provisioned,true);assert.equal(access.internalAccess,true);assert.equal(resolveRootExperience(access),"PLATFORM");assert.equal(hasTenantInternalAccess({...access,activeOrganization:null}),false)});
@@ -7,3 +8,9 @@ test("a normal organization member retains the operational dashboard",()=>{const
 test("an authenticated user without provisioning remains Access pending",()=>{const access={isSuperAdmin:false,internalAccess:false,provisioned:false,hasActiveOrganization:false};assert.equal(resolveRootExperience(access),"UNPROVISIONED")});
 test("tenant data access always requires an active organization",()=>{assert.equal(hasTenantInternalAccess({internalAccess:true,activeOrganization:null}),false);assert.equal(hasTenantInternalAccess(null),false)});
 test("explicit Back Office context remains distinct after organizations exist",()=>{const access={isSuperAdmin:true,internalAccess:true,provisioned:true,hasActiveOrganization:false};assert.equal(resolveRootExperience(access),"PLATFORM")});
+test("unprovisioned users retain the shell without tenant or platform navigation",()=>{
+  const shell = readFileSync("components/layout/app-shell.tsx", "utf8");
+  assert.doesNotMatch(shell, /account\/unprovisioned/);
+  assert.match(shell, /access\?\.internalAccess/);
+  assert.match(shell, /: \[\]/);
+});
