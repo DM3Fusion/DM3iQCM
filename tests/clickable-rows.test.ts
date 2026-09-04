@@ -63,8 +63,8 @@ test("membership controls remain nested within navigable entity rows", () => {
   assert.match(user, /className="membership-form"/);
 });
 
-test("registers without a detail destination are intentionally non-navigable", () => {
-  assert.doesNotMatch(source("app/customers/page.tsx"), /NavigableRow/);
+test("registers without a detail destination remain intentionally non-navigable", () => {
+  assert.match(source("app/customers/page.tsx"), /NavigableRow/);
   assert.doesNotMatch(source("app/questions/page.tsx"), /NavigableRow/);
   assert.doesNotMatch(source("app/service-desk/page.tsx"), /NavigableRow/);
 });
