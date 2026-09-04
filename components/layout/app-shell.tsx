@@ -47,9 +47,11 @@ const isPublic = (path: string) =>
 export function AppShell({
   children,
   access,
+  applicationVersion,
 }: {
   children: React.ReactNode;
   access: AccessContext | null;
+  applicationVersion: string;
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -112,7 +114,7 @@ export function AppShell({
         <div
           className={`organization-card ${platformContext ? "platform-context" : ""}`}
         >
-          <span>{platformContext ? "Platform" : "Organization"}</span>
+          <div className="shell-context-label"><span>{platformContext ? "Platform" : "Organization"}</span><small>Ver. {applicationVersion}</small></div>
           {!platformContext && org ? (
             <div>
               <OrganizationAvatar name={org.name} src={org.avatarUrl} size="sm" />
