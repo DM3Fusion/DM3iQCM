@@ -13,6 +13,7 @@ import {
 import { getOrganizationAdministration } from "@/lib/data/platform-repository";
 import { LicenseForm } from "@/components/license-form";
 import { effectiveLicense } from "@/lib/licensing";
+import { OrganizationSummaryRow } from "@/components/organization-summary-row";
 const roles = [
   "BUSINESS_OWNER",
   "BUSINESS_ADMIN",
@@ -137,17 +138,11 @@ export default async function Page({
               <dt>Business admins</dt>
               <dd>{organization.businessAdmins} / 2</dd>
             </div>
-            <div>
-              <dt><a className="summary-drilldown-link" href={`?drilldown=customers&year=${year}&activity=${activity}`}>Customers</a></dt>
-              <dd>{organization.customers}</dd>
-            </div>
-            <div>
-              <dt><a className="summary-drilldown-link" href={`?drilldown=cases&year=${year}&activity=${activity}`}>Open cases</a></dt>
-              <dd>{organization.openCases}</dd>
-            </div>
+            <div><dt><OrganizationSummaryRow label="Customers" count={organization.customers} target="customers" selected={drilldown === "customers"} /></dt></div>
+            <div><dt><OrganizationSummaryRow label="Open cases" count={organization.openCases} target="cases" selected={drilldown === "cases"} /></dt></div>
             <div><dt>Last activity</dt><dd>{organization.lastActivity ? new Date(organization.lastActivity).toLocaleString() : "No activity yet"}</dd></div>
           </dl>
-          {drilldown ? <section className="organization-drilldown">
+          {drilldown ? <section id="organization-drilldown" className="organization-drilldown">
             <div className="section-head"><div><h3>{drilldown === "cases" ? "Open cases" : "Customers"}</h3><p>{drilldown === "cases" ? `${displayedCases.length} matching cases` : `${filteredCustomers.length} matching customers`}</p></div><Link href={`?`}>Close</Link></div>
             <form className="filters" method="get"><input type="hidden" name="drilldown" value={drilldown}/><select name="year" defaultValue={String((query as { year?: string }).year ?? year)}><option value={String(runtimeYear())}>This year</option>{years.filter((item) => item !== runtimeYear()).map((item) => <option key={item} value={item}>{item}</option>)}<option value="all">All years</option></select><select name="activity" defaultValue={activity}><option value="all">All activity</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option><option value="year">This calendar year</option></select>{drilldown === "cases" ? <select name="status" defaultValue={selectedStatus}><option value="all">All open statuses</option>{openStatuses.map((item) => <option key={item} value={item}>{item.replaceAll("_", " ")}</option>)}</select> : null}<button className="filter-button">Apply</button></form>
             <div className="table-scroll"><table><thead><tr>{drilldown === "cases" ? <><th>Case</th><th>Customer</th><th>Status</th><th>Last activity</th><th>Created</th></> : <><th>Customer</th><th>Contact</th><th>Last activity</th><th>Created</th></>}</tr></thead><tbody>{drilldown === "cases" ? displayedCases.map((item) => <tr key={item.id}><td>{item.case_number} · {item.title}</td><td>{customers.find((customer) => customer.id === item.customer_id)?.name ?? "—"}</td><td><Badge value={item.status}/></td><td>{new Date(item.updated_at).toLocaleString()}</td><td>{new Date(item.created_at).toLocaleDateString()}</td></tr>) : filteredCustomers.map((item) => <tr key={item.id}><td>{item.name}</td><td>{item.email || item.phone || "—"}</td><td>{new Date(item.updated_at).toLocaleString()}</td><td>{new Date(item.created_at).toLocaleDateString()}</td></tr>)}</tbody></table></div>

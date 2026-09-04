@@ -24,10 +24,11 @@ test("organization sidebar shows canonical profile display name with safe fallba
 });
 test("organization administration exposes live activity drilldowns",()=>{
   const page = readFileSync("app/admin/organizations/[organizationId]/page.tsx", "utf8");
+  const row = readFileSync("components/organization-summary-row.tsx", "utf8");
   const repository = readFileSync("lib/data/platform-repository.ts", "utf8");
   assert.match(page, /Last activity/);
-  assert.match(page, /drilldown=cases/);
-  assert.match(page, /drilldown=customers/);
+  assert.match(row, /target: "cases" \| "customers"/);
+  assert.match(row, /params\.set\("drilldown", target\)/);
   assert.match(page, /COMPLETED.*CLOSED.*CANCELLED/);
   assert.match(page, /This calendar year/);
   assert.match(repository, /lastActivity/);
