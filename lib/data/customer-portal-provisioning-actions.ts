@@ -36,7 +36,7 @@ export async function manageCustomerPortalAccessAction(form: FormData) {
   const { data: customer } = await supabase.from("customers").select("id,email").eq("id", customerId).eq("organization_id", org.id).maybeSingle();
   if (!customer) redirect(destination(customerId, "error", "Customer not found."));
   const path = `/customers/${customerId}`;
-  const linked = await supabase.from("customer_portal_users").select("id,user_id,is_active").eq("organization_id", org.id).eq("customer_id", customerId).maybeSingle();
+  const linked = await supabase.from("customer_portal_users").select("id,user_id,is_active").eq("organization_id", org.id).eq("customer_id", customerId).eq("is_active", true).maybeSingle();
   if (linked.error) redirect(destination(customerId, "error", "Portal access could not be checked."));
   if (intent === "disable") {
     const portalAccessId = value(form, "portalAccessId");

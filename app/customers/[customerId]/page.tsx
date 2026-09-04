@@ -17,7 +17,7 @@ export default async function Page({ params, searchParams }: { params: Promise<{
   const [{ data: creator }, { data: cases }, { data: portalLinks }] = await Promise.all([
     customer.created_by_user_id ? supabase.from("profiles").select("*").eq("id", customer.created_by_user_id).maybeSingle() : Promise.resolve({ data: null }),
     supabase.from("cases").select("id,status").eq("organization_id", access.activeOrganization.id).eq("customer_id", customer.id),
-    supabase.from("customer_portal_users").select("id,user_id,is_active").eq("organization_id", access.activeOrganization.id).eq("customer_id", customer.id),
+    supabase.from("customer_portal_users").select("id,user_id,is_active").eq("organization_id", access.activeOrganization.id).eq("customer_id", customer.id).order("is_active", { ascending: false }),
   ]);
   const openCases = (cases ?? []).filter((item) => !["COMPLETED", "CLOSED", "CANCELLED"].includes(item.status)).length;
   const portal = portalLinks?.[0];
