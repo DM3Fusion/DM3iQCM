@@ -63,10 +63,10 @@ test("membership controls remain nested within navigable entity rows", () => {
   assert.match(user, /className="membership-form"/);
 });
 
-test("registers without a detail destination remain intentionally non-navigable", () => {
+test("registers use navigation only where detail destinations exist", () => {
   assert.match(source("app/customers/page.tsx"), /NavigableRow/);
   assert.doesNotMatch(source("app/questions/page.tsx"), /NavigableRow/);
-  assert.doesNotMatch(source("app/service-desk/page.tsx"), /NavigableRow/);
+  assert.match(source("app/service-desk/page.tsx"), /NavigableRow/);
 });
 
 test("the shared row keeps a real accessible link and visible row focus", () => {

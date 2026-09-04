@@ -13,6 +13,9 @@ export type ActivityRow = Tables["case_activity"]["Row"];
 export type ProfileRow = Tables["profiles"]["Row"];
 export type AvatarProfileRow = ProfileWithAvatar<ProfileRow>;
 export type MemberRow = Tables["organization_members"]["Row"];
+export type ServiceRequestRow = Tables["service_requests"]["Row"] & { created_by_user_id: string | null };
+export type ServiceRequestActivityRow = { id: string; organization_id: string; service_request_id: string; event_type: string; actor_user_id: string | null; occurred_at: string; previous_value: unknown; new_value: unknown; metadata: unknown };
+export interface LiveServiceRequest extends ServiceRequestRow { customer: CustomerRow | null; assigned: AvatarProfileRow | null; creator: AvatarProfileRow | null }
 export interface LiveCase extends CaseRow {
   customer: CustomerRow | null;
   manager: AvatarProfileRow | null;
@@ -38,6 +41,7 @@ export interface LiveOrganizationData {
     actor: AvatarProfileRow | null;
     caseNumber: string;
   })[];
+  serviceRequests: LiveServiceRequest[];
 }
 export class DataAccessError extends Error {
   constructor(message = "Case-management data is temporarily unavailable.") {
@@ -75,6 +79,7 @@ export async function getLiveOrganizationData(): Promise<LiveOrganizationData> {
     taskResult,
     memberResult,
     activityResult,
+    requestResult,
   ] = await Promise.all([
     supabase
       .from("cases")
@@ -107,6 +112,7 @@ export async function getLiveOrganizationData(): Promise<LiveOrganizationData> {
       .eq("organization_id", organizationId)
       .order("created_at", { ascending: false })
       .limit(50),
+    supabase.from("service_requests").select("*").eq("organization_id", organizationId).order("updated_at", { ascending: false }),
   ]);
   const error =
     caseResult.error ??
@@ -115,6 +121,11 @@ export async function getLiveOrganizationData(): Promise<LiveOrganizationData> {
     taskResult.error ??
     memberResult.error ??
     activityResult.error;
+  const requestError = (requestResult as { error?: { code?: string; message?: string; details?: string; hint?: string } | null }).error;
+  if (requestError) {
+    console.error("Service request query failed", { code: requestError.code, message: requestError.message, details: requestError.details, hint: requestError.hint });
+    throw new DataAccessError();
+  }
   if (error) {
     console.error("Live organization query failed", {
       code: error.code,
@@ -129,6 +140,7 @@ export async function getLiveOrganizationData(): Promise<LiveOrganizationData> {
       ...(activityResult.data ?? []).flatMap((row) =>
         row.actor_user_id ? [row.actor_user_id] : [],
       ),
+      ...((requestResult.data ?? []) as unknown as ServiceRequestRow[]).flatMap((row) => [row.assigned_user_id, row.created_by_user_id].filter((id): id is string => Boolean(id))),
     ]),
   ];
   const profileResult = profileIds.length
@@ -185,7 +197,14 @@ export async function getLiveOrganizationData(): Promise<LiveOrganizationData> {
         ]
       : [];
   });
-  return { organizationId, cases, customers, staff, activities };
+  const rawRequests = (requestResult.data ?? []) as unknown as ServiceRequestRow[];
+  const serviceRequests: LiveServiceRequest[] = rawRequests.map((request) => ({
+    ...request,
+    customer: customers.find((customer) => customer.id === request.customer_id) ?? null,
+    assigned: request.assigned_user_id ? (byProfile.get(request.assigned_user_id) ?? null) : null,
+    creator: request.created_by_user_id ? (byProfile.get(request.created_by_user_id) ?? null) : null,
+  }));
+  return { organizationId, cases, customers, staff, activities, serviceRequests };
 }
 export async function getLiveCase(caseId: string) {
   const data = await getLiveOrganizationData();

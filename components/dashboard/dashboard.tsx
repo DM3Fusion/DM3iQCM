@@ -6,6 +6,7 @@ import {
   getLiveDashboardMetrics,
   isLiveCaseActive,
   isLiveCaseOverdue,
+  getServiceRequestMetrics,
 } from "@/lib/live-dashboard-metrics";
 import { formatRelativeDate } from "@/lib/format";
 import { CaseTable } from "@/components/cases/case-table";
@@ -13,6 +14,7 @@ import { UserAvatar } from "@/components/user-avatar";
 export function Dashboard({ data }: { data: LiveOrganizationData }) {
   const now = new Date();
   const metrics = getLiveDashboardMetrics(data.cases, now);
+  const serviceMetrics = getServiceRequestMetrics(data.serviceRequests);
   const workload = data.staff.map(({ profile }) => {
     const activeCaseIds = new Set(
       data.cases
@@ -66,6 +68,9 @@ export function Dashboard({ data }: { data: LiveOrganizationData }) {
             </small>
           </article>
         ))}
+      </div>
+      <div className="metric-grid service-metrics">
+        {serviceMetrics.map((metric) => <Link className={`metric tone-${metric.tone}`} href="/service-desk" key={metric.label}><div><span>{metric.label}</span><strong>{metric.value}</strong></div><span className="metric-icon">⌁</span><small>Current Service Desk workload</small></Link>)}
       </div>
       <section className="panel">
         <div className="section-head">
