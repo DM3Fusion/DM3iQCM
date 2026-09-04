@@ -140,7 +140,7 @@ export function AppShell({
                 ) : (
                   <strong>{org.name}</strong>
                 )}
-                <small>{org.role.replaceAll("_", " ")}</small>
+                <small className="sidebar-user-name">{access.displayName}</small>
               </div>
             </div>
           ) : platformContext ? (

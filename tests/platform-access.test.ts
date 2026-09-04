@@ -14,3 +14,11 @@ test("unprovisioned users retain the shell without tenant or platform navigation
   assert.match(shell, /access\?\.internalAccess/);
   assert.match(shell, /: \[\]/);
 });
+test("organization sidebar shows canonical profile display name with safe fallback",()=>{
+  const shell = readFileSync("components/layout/app-shell.tsx", "utf8");
+  const context = readFileSync("lib/auth/context.ts", "utf8");
+  assert.match(shell, /className="sidebar-user-name">\{access\.displayName\}/);
+  assert.match(context, /profile\.data\?\.display_name/);
+  assert.match(context, /user\.email \|\|\n      "User"/);
+  assert.match(shell, /SUPER ADMIN/);
+});

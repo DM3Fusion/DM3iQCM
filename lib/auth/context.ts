@@ -123,11 +123,8 @@ export async function getAccessContext(): Promise<AccessContext | null> {
     const customerPortalIds = (portal.data ?? []).map((row) => row.customer_id);
     const displayName =
       profile.data?.display_name ||
-      [profile.data?.first_name, profile.data?.last_name]
-        .filter(Boolean)
-        .join(" ") ||
       user.email ||
-      "DM3iQ User";
+      "User";
     const avatarUrl = profile.data?.avatar_path
       ? (
           await supabase.storage
