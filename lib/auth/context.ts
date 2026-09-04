@@ -4,6 +4,7 @@ import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import type { Database } from "@/types/database.generated";
 import { hasTenantInternalAccess } from "./access-routing";
 import { ORGANIZATION_AVATAR_BUCKET } from "@/lib/profile/avatar";
+import { effectiveLicense, type LicenseSnapshot } from "@/lib/licensing";
 export const ACTIVE_ORGANIZATION_COOKIE = "dm3iqcm-active-organization";
 export const PLATFORM_CONTEXT_COOKIE_VALUE = "platform";
 type Role = Database["public"]["Enums"]["application_role"];
@@ -25,6 +26,7 @@ export interface AccessContext {
   customerPortalIds: string[];
   provisioned: boolean;
   internalAccess: boolean;
+  license: (LicenseSnapshot & ReturnType<typeof effectiveLicense>) | null;
 }
 export type InternalAccessContext = AccessContext & {
   activeOrganization: AuthorizedOrganization;
@@ -111,6 +113,13 @@ export async function getAccessContext(): Promise<AccessContext | null> {
         : (organizations.find((org) => org.id === selected) ??
           organizations[0] ??
           null);
+    let license: (LicenseSnapshot & ReturnType<typeof effectiveLicense>) | null = null;
+    if (activeOrganization) {
+      // The licensing migration extends the generated schema at deployment time.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: currentLicense } = await (supabase as any).from("organization_licenses").select("license_status,commercial_state,starts_at,expires_at,grace_ends_at,notice_days,notification_thresholds").eq("organization_id", activeOrganization.id).eq("is_current", true).maybeSingle();
+      if (currentLicense) license = { ...effectiveLicense({ status: currentLicense.license_status, commercialState: currentLicense.commercial_state, startsAt: currentLicense.starts_at, expiresAt: currentLicense.expires_at, graceEndsAt: currentLicense.grace_ends_at, noticeDays: currentLicense.notice_days }), ...currentLicense, status: currentLicense.license_status, commercialState: currentLicense.commercial_state };
+    }
     const customerPortalIds = (portal.data ?? []).map((row) => row.customer_id);
     const displayName =
       profile.data?.display_name ||
@@ -139,6 +148,7 @@ export async function getAccessContext(): Promise<AccessContext | null> {
         organizations.length > 0 ||
         customerPortalIds.length > 0,
       internalAccess: isSuperAdmin || organizations.length > 0,
+      license,
     };
   } catch (error) {
     console.error("Unable to resolve authenticated access context", error);

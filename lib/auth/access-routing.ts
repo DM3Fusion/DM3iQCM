@@ -13,6 +13,6 @@ export function resolveRootExperience(access: AccessRoutingState): RootExperienc
   return "UNPROVISIONED";
 }
 
-export function hasTenantInternalAccess(access: { internalAccess: boolean; activeOrganization?: unknown } | null): boolean {
-  return Boolean(access?.internalAccess && access.activeOrganization);
+export function hasTenantInternalAccess(access: { internalAccess: boolean; activeOrganization?: unknown; isSuperAdmin?: boolean; license?: { workspaceAllowed: boolean } | null } | null): boolean {
+  return Boolean(access?.internalAccess && access.activeOrganization && (access.isSuperAdmin || !access.license || access.license.workspaceAllowed));
 }

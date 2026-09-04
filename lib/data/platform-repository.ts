@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { requireSuperAdmin } from "@/lib/auth/context";
 import { createClient } from "@/lib/supabase/server";
 import { classifyAccess } from "@/lib/data/user-provisioning";
@@ -12,6 +13,7 @@ export type ProfileRow = Tables["profiles"]["Row"];
 export type AvatarProfileRow = ProfileWithAvatar<ProfileRow>;
 export interface OrganizationAdminRow extends OrganizationRow {
   avatarUrl: string | null;
+  license: any | null;
   activeUsers: number;
   businessOwners: number;
   businessAdmins: number;
@@ -66,6 +68,7 @@ async function loadPlatformData() {
     supabase.from("cases").select("id,organization_id,status"),
     supabase.from("customers").select("id,organization_id"),
   ]);
+  const { data: licenses } = await (supabase as any).from("organization_licenses").select("*").eq("is_current", true);
   const error =
     organizations.error ??
     memberships.error ??
@@ -88,7 +91,7 @@ async function loadPlatformData() {
     return { ...org, avatarUrl: signed.data?.signedUrl ?? null };
   }));
   return {
-    organizations: organizationsWithAvatars,
+    organizations: organizationsWithAvatars.map((org) => ({ ...org, license: (licenses ?? []).find((l: any) => l.organization_id === org.id) ?? null })),
     memberships: memberships.data ?? [],
     profiles: hydratedProfiles,
     platformRoles: platformRoles.data ?? [],

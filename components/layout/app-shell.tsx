@@ -188,6 +188,13 @@ export function AppShell({
           </div>
           {access ? <AccountMenu displayName={access.displayName} email={access.user.email} avatarUrl={access.avatarUrl} /> : null}
         </header>
+        {!platformContext && access?.license && (access.license.status === "EXPIRING" || access.license.isInGrace) ? (
+          <div className="license-warning" role="status">
+            {access.license.isInGrace
+              ? `Your DM3iQ license expired${access.license.expiresAt ? ` on ${new Date(access.license.expiresAt).toLocaleDateString()}` : ""}. Access remains available during the grace period.`
+              : `Your DM3iQ license expires in ${access.license.daysRemaining ?? 0} days.`}
+          </div>
+        ) : null}
         <main>{children}</main>
       </div>
     </div>

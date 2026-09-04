@@ -56,6 +56,7 @@ export default async function Page({
                 <tr>
                   <th>Organization</th>
                   <th>Status</th>
+                  <th>License</th>
                   <th>Created</th>
                   <th>Users</th>
                   <th>Owners</th>
@@ -82,6 +83,7 @@ export default async function Page({
                     <td>
                       <Badge value={o.status} />
                     </td>
+                    <td><Badge value={o.license?.license_status ?? "EXPIRED"} /></td>
                     <td>{new Date(o.created_at).toLocaleDateString()}</td>
                     <td>{o.activeUsers}</td>
                     <td>{o.businessOwners}</td>

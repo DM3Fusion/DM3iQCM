@@ -17,6 +17,7 @@ export default async function Page(){
     return <><PageHeader eyebrow="Platform Administration" title="Back Office" description="Manage DM3iQ organizations, users, access, and platform operations."/><PlatformDashboard summary={summary}/></>;
   }
   if(experience==="UNPROVISIONED")redirect("/account/unprovisioned");
+  if(access.license && !access.license.workspaceAllowed) redirect("/account/license-expired");
   const data=await getLiveOrganizationData();
   return <><PageHeader eyebrow="Operations" title="Dashboard" description="Live casework requiring your organization’s attention." action={<Link className="primary-button" href="/cases/new">＋ New Case</Link>}/><Dashboard data={data}/></>;
 }
