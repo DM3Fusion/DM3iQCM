@@ -15,7 +15,12 @@ const ACCEPTED_SOURCE_TYPES = new Set([
   "image/webp",
 ]);
 
-async function loadImage(file: File): Promise<HTMLImageElement> {
+class AvatarDecodeError extends Error {}
+class AvatarWebpEncodeError extends Error {}
+
+async function loadImage(
+  file: File,
+): Promise<{ image: HTMLImageElement; objectUrl: string }> {
   const objectUrl = URL.createObjectURL(file);
 
   try {
@@ -23,61 +28,88 @@ async function loadImage(file: File): Promise<HTMLImageElement> {
 
     await new Promise<void>((resolve, reject) => {
       image.onload = () => resolve();
-      image.onerror = () => reject(new Error("Image could not be decoded."));
+      image.onerror = () => reject(new AvatarDecodeError());
       image.src = objectUrl;
     });
 
-    return image;
-  } finally {
+    if (typeof image.decode === "function") {
+      try {
+        await image.decode();
+      } catch {
+        // Some Safari versions reject decode() after onload even when the
+        // image has usable dimensions. Keep the already-loaded image in that case.
+        if (!image.naturalWidth || !image.naturalHeight) {
+          throw new AvatarDecodeError();
+        }
+      }
+    }
+
+    return { image, objectUrl };
+  } catch (cause) {
     URL.revokeObjectURL(objectUrl);
+    throw cause instanceof AvatarDecodeError ? cause : new AvatarDecodeError();
   }
 }
 
 async function optimizeAvatar(file: File): Promise<File> {
-  const image = await loadImage(file);
+  const { image, objectUrl } = await loadImage(file);
 
-  if (!image.naturalWidth || !image.naturalHeight) {
-    throw new Error("The selected image has invalid dimensions.");
+  try {
+    if (!image.naturalWidth || !image.naturalHeight) {
+      throw new AvatarDecodeError();
+    }
+
+    const sourceSize = Math.min(image.naturalWidth, image.naturalHeight);
+    const sourceX = Math.floor((image.naturalWidth - sourceSize) / 2);
+    const sourceY = Math.floor((image.naturalHeight - sourceSize) / 2);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = AVATAR_OUTPUT_SIZE;
+    canvas.height = AVATAR_OUTPUT_SIZE;
+
+    const context = canvas.getContext("2d");
+
+    if (!context) {
+      throw new AvatarDecodeError();
+    }
+
+    try {
+      context.drawImage(
+        image,
+        sourceX,
+        sourceY,
+        sourceSize,
+        sourceSize,
+        0,
+        0,
+        AVATAR_OUTPUT_SIZE,
+        AVATAR_OUTPUT_SIZE,
+      );
+    } catch {
+      throw new AvatarDecodeError();
+    }
+
+    let blob: Blob | null;
+    try {
+      blob = await new Promise<Blob | null>((resolve) => {
+        canvas.toBlob(resolve, "image/webp", AVATAR_WEBP_QUALITY);
+      });
+    } catch {
+      throw new AvatarWebpEncodeError();
+    }
+
+    if (!blob || blob.type !== "image/webp") {
+      throw new AvatarWebpEncodeError();
+    }
+
+    return new File([blob], "avatar.webp", {
+      type: "image/webp",
+      lastModified: Date.now(),
+    });
+  } finally {
+    // The image may still need the source URL while drawImage/toBlob finish.
+    URL.revokeObjectURL(objectUrl);
   }
-
-  const sourceSize = Math.min(image.naturalWidth, image.naturalHeight);
-  const sourceX = Math.floor((image.naturalWidth - sourceSize) / 2);
-  const sourceY = Math.floor((image.naturalHeight - sourceSize) / 2);
-
-  const canvas = document.createElement("canvas");
-  canvas.width = AVATAR_OUTPUT_SIZE;
-  canvas.height = AVATAR_OUTPUT_SIZE;
-
-  const context = canvas.getContext("2d");
-
-  if (!context) {
-    throw new Error("Image processing is unavailable in this browser.");
-  }
-
-  context.drawImage(
-    image,
-    sourceX,
-    sourceY,
-    sourceSize,
-    sourceSize,
-    0,
-    0,
-    AVATAR_OUTPUT_SIZE,
-    AVATAR_OUTPUT_SIZE,
-  );
-
-  const blob = await new Promise<Blob | null>((resolve) => {
-    canvas.toBlob(resolve, "image/webp", AVATAR_WEBP_QUALITY);
-  });
-
-  if (!blob || blob.type !== "image/webp") {
-    throw new Error("This browser could not create the optimized avatar.");
-  }
-
-  return new File([blob], "avatar.webp", {
-    type: "image/webp",
-    lastModified: Date.now(),
-  });
 }
 
 export function AvatarUploadForm() {
@@ -134,9 +166,11 @@ export function AvatarUploadForm() {
       setProcessing(false);
     } catch (cause) {
       setError(
-        cause instanceof Error
-          ? cause.message
-          : "The avatar could not be processed.",
+        cause instanceof AvatarWebpEncodeError
+          ? "This browser cannot prepare WebP avatars. Please try another current browser."
+          : cause instanceof AvatarDecodeError
+            ? "This image could not be decoded or rendered. Please choose another image."
+            : "The avatar could not be processed.",
       );
       setProcessing(false);
     }
@@ -159,11 +193,7 @@ export function AvatarUploadForm() {
 
       {error ? <div className="form-alert">{error}</div> : null}
 
-      <button
-        className="primary-button"
-        type="submit"
-        disabled={processing}
-      >
+      <button className="primary-button" type="submit" disabled={processing}>
         {processing ? "Optimizing…" : "Upload / Change"}
       </button>
     </form>
