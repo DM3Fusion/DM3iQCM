@@ -22,5 +22,5 @@ export function getInvitationRedirect() {
   const origin =
     configured ||
     (vercel ? `https://${vercel}` : "https://dm-3i-qcm.vercel.app");
-  return `${origin.replace(/\/$/, "")}/auth/callback`;
+  return `${origin.replace(/\/$/, "")}/auth/callback?flow=invite`;
 }
