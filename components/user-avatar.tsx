@@ -16,7 +16,7 @@ export function UserAvatar({
   const label = displayName || email || "User";
   return (
     <span
-      className={`user-avatar user-avatar-${size}`}
+      className={`user-avatar user-avatar-${size}${src ? " user-avatar-image" : ""}`}
       title={label}
       aria-label={label}
     >
