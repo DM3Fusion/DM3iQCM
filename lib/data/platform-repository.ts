@@ -3,6 +3,7 @@ import { requireSuperAdmin } from "@/lib/auth/context";
 import { createClient } from "@/lib/supabase/server";
 import { classifyAccess } from "@/lib/data/user-provisioning";
 import { attachAvatarUrls, type ProfileWithAvatar } from "@/lib/data/avatar-urls";
+import { ORGANIZATION_AVATAR_BUCKET } from "@/lib/profile/avatar";
 import type { Database } from "@/types/database.generated";
 type Tables = Database["public"]["Tables"];
 export type OrganizationRow = Tables["organizations"]["Row"];
@@ -10,6 +11,7 @@ export type MembershipRow = Tables["organization_members"]["Row"];
 export type ProfileRow = Tables["profiles"]["Row"];
 export type AvatarProfileRow = ProfileWithAvatar<ProfileRow>;
 export interface OrganizationAdminRow extends OrganizationRow {
+  avatarUrl: string | null;
   activeUsers: number;
   businessOwners: number;
   businessAdmins: number;
@@ -80,8 +82,13 @@ async function loadPlatformData() {
     throw new Error("Platform administration data is temporarily unavailable.");
   }
   const hydratedProfiles = await attachAvatarUrls(supabase, profiles.data ?? []);
+  const organizationsWithAvatars = await Promise.all((organizations.data ?? []).map(async (org) => {
+    if (!org.avatar_path) return { ...org, avatarUrl: null };
+    const signed = await supabase.storage.from(ORGANIZATION_AVATAR_BUCKET).createSignedUrl(org.avatar_path, 3600);
+    return { ...org, avatarUrl: signed.data?.signedUrl ?? null };
+  }));
   return {
-    organizations: organizations.data ?? [],
+    organizations: organizationsWithAvatars,
     memberships: memberships.data ?? [],
     profiles: hydratedProfiles,
     platformRoles: platformRoles.data ?? [],

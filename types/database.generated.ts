@@ -703,6 +703,8 @@ export type Database = {
       }
       organizations: {
         Row: {
+          avatar_path: string | null
+          avatar_updated_at: string | null
           created_at: string
           id: string
           name: string
@@ -711,6 +713,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          avatar_path?: string | null
+          avatar_updated_at?: string | null
           created_at?: string
           id?: string
           name: string
@@ -719,6 +723,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          avatar_path?: string | null
+          avatar_updated_at?: string | null
           created_at?: string
           id?: string
           name?: string

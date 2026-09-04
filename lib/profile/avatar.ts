@@ -1,5 +1,7 @@
 export const AVATAR_BUCKET = "user-avatars";
 export const AVATAR_SOURCE_BUCKET = "user-avatar-sources";
+export const ORGANIZATION_AVATAR_BUCKET = "organization-avatars";
+export const ORGANIZATION_AVATAR_SOURCE_BUCKET = "organization-avatar-sources";
 
 export const AVATAR_OUTPUT_SIZE = 512;
 export const AVATAR_WEBP_QUALITY = 0.82;
@@ -36,4 +38,20 @@ export function isOwnedAvatarSourcePath(path: string, userId: string) {
   return new RegExp(
     `^${userId}/source-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\\.(jpg|jpeg|png|webp)$`,
   ).test(path);
+}
+
+export function organizationInitials(name?: string | null) {
+  const words = (name ?? "").trim().split(/[^A-Za-z0-9]+/).filter(Boolean);
+  if (!words.length) return "O";
+  if (words.length >= 3) return words.slice(0, 3).map((word) => word[0]).join("").toUpperCase();
+  if (words.length === 2) return words.map((word) => word[0]).join("").toUpperCase();
+  return words[0].slice(0, 3).toUpperCase();
+}
+
+export function isOwnedOrganizationAvatarPath(path: string, organizationId: string) {
+  return new RegExp(`^${organizationId}/avatar-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\\.webp$`).test(path);
+}
+
+export function isOwnedOrganizationAvatarSourcePath(path: string, organizationId: string) {
+  return new RegExp(`^${organizationId}/source-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\\.(jpg|jpeg|png|webp)$`).test(path);
 }

@@ -23,6 +23,7 @@ import { returnToBackOfficeAction } from "@/lib/data/platform-actions";
 import type { AccessContext } from "@/lib/auth/context";
 import { AccountMenu } from "@/components/account-menu";
 import { UserAvatar } from "@/components/user-avatar";
+import { OrganizationAvatar } from "@/components/organization-avatar";
 const organizationNav = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/cases", label: "Cases", icon: BriefcaseBusiness },
@@ -114,17 +115,7 @@ export function AppShell({
           <span>{platformContext ? "Platform" : "Organization"}</span>
           {!platformContext && org ? (
             <div>
-              <Link
-                href="/account/profile"
-                aria-label="Open My Profile"
-                className="avatar-profile-link"
-              >
-                <UserAvatar
-                  displayName={access?.displayName}
-                  email={access?.user.email}
-                  src={access?.avatarUrl}
-                />
-              </Link>
+              <OrganizationAvatar name={org.name} src={org.avatarUrl} size="sm" />
               <div className="organization-details">
                 {access && access.organizations.length > 1 ? (
                   <form action={selectActiveOrganizationAction}>

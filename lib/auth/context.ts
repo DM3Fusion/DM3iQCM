@@ -3,6 +3,7 @@ import type { User } from "@supabase/supabase-js";
 import { createClient, isSupabaseConfigured } from "@/lib/supabase/server";
 import type { Database } from "@/types/database.generated";
 import { hasTenantInternalAccess } from "./access-routing";
+import { ORGANIZATION_AVATAR_BUCKET } from "@/lib/profile/avatar";
 export const ACTIVE_ORGANIZATION_COOKIE = "dm3iqcm-active-organization";
 export const PLATFORM_CONTEXT_COOKIE_VALUE = "platform";
 type Role = Database["public"]["Enums"]["application_role"];
@@ -11,6 +12,8 @@ export interface AuthorizedOrganization {
   name: string;
   slug: string;
   role: Role;
+  avatarPath: string | null;
+  avatarUrl: string | null;
 }
 export interface AccessContext {
   user: User;
@@ -71,7 +74,7 @@ export async function getAccessContext(): Promise<AccessContext | null> {
     const allowedIds = membershipRows.map((row) => row.organization_id);
     let organizationQuery = supabase
       .from("organizations")
-      .select("id,name,slug")
+      .select("id,name,slug,avatar_path,avatar_updated_at")
       .eq("status", "ACTIVE")
       .order("name");
     if (!isSuperAdmin)
@@ -82,12 +85,20 @@ export async function getAccessContext(): Promise<AccessContext | null> {
           : ["00000000-0000-0000-0000-000000000000"],
       );
     const { data: organizationRows } = await organizationQuery;
+    const organizationAvatarUrls = await Promise.all((organizationRows ?? []).map(async (org) => ({
+      id: org.id,
+      url: org.avatar_path
+        ? (await supabase.storage.from(ORGANIZATION_AVATAR_BUCKET).createSignedUrl(org.avatar_path, 3600)).data?.signedUrl ?? null
+        : null,
+    })));
     const organizations: AuthorizedOrganization[] = (
       organizationRows ?? []
     ).map((org) => ({
       id: org.id,
       name: org.name,
       slug: org.slug,
+      avatarPath: org.avatar_path,
+      avatarUrl: organizationAvatarUrls.find((item) => item.id === org.id)?.url ?? null,
       role: isSuperAdmin
         ? "SUPER_ADMIN"
         : (membershipRows.find((row) => row.organization_id === org.id)?.role ??

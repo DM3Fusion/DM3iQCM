@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { NavigableRow } from "@/components/navigable-row";
 import { UserAvatar } from "@/components/user-avatar";
+import { OrganizationAvatar } from "@/components/organization-avatar";
+import { OrganizationAvatarUploadForm } from "@/components/organization-avatar-upload-form";
 import { PageHeader, Badge } from "@/components/ui";
 import {
   enterOrganizationWorkspaceAction,
@@ -29,7 +31,7 @@ export default async function Page({
     <>
       <PageHeader
         eyebrow="Platform Administration"
-        title={organization.name}
+        title={<span className="organization-header-title"><a href="#organization-avatar" className="organization-avatar-link" aria-label="Manage organization avatar"><OrganizationAvatar name={organization.name} src={organization.avatarUrl} size="lg" /></a><span>{organization.name}</span></span>}
         description={`Organization administration · ${organization.slug}`}
         action={
           organization.status === "ACTIVE" ? (
@@ -94,6 +96,11 @@ export default async function Page({
               <button className="primary-button">Save changes</button>
             </div>
           </form>
+          <div id="organization-avatar" className="organization-avatar-panel">
+            <OrganizationAvatar name={organization.name} src={organization.avatarUrl} size="md" />
+            <div><strong>Organization avatar</strong><p>Private identity shown in the workspace.</p></div>
+            <OrganizationAvatarUploadForm organizationId={organization.id} hasAvatar={Boolean(organization.avatar_path)} />
+          </div>
         </section>
         <aside className="panel detail-section admin-summary">
           <h2>Live summary</h2>
