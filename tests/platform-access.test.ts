@@ -34,3 +34,14 @@ test("organization administration exposes live activity drilldowns",()=>{
   assert.match(repository, /lastActivity/);
   assert.match(repository, /openCases: data\.cases\.filter/);
 });
+test("summary drilldown rows preserve full-width button layout",()=>{
+  const css = readFileSync("app/globals.css", "utf8");
+  const row = readFileSync("components/organization-summary-row.tsx", "utf8");
+  assert.match(row, /<button type="button"/);
+  assert.match(row, /aria-expanded/);
+  assert.match(row, /aria-controls/);
+  assert.match(css, /summary-drilldown-row\{[^}]*display:flex/);
+  assert.match(css, /summary-drilldown-row\{[^}]*width:100%/);
+  assert.match(css, /summary-drilldown-row\{[^}]*justify-content:space-between/);
+  assert.match(css, /summary-drilldown-row:hover/);
+});
