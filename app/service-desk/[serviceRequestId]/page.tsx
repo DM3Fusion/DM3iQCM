@@ -5,14 +5,25 @@ import { getLiveOrganizationData, displayName, type ServiceRequestActivityRow } 
 import { createClient } from "@/lib/supabase/server";
 import { getAccessContext } from "@/lib/auth/context";
 import { ServiceRequestEditControls } from "@/components/service-request-edit-controls";
+import { serviceRequestLabel } from "@/lib/service-request-format";
 
 export const metadata = { title: "Service Request" };
+
+const storedValue = (value: unknown) => typeof value === "string" ? value : value == null ? null : String(value);
+const transitionText = (activity: ServiceRequestActivityRow & { actor_display_name: string | null; actor_email: string | null }, staffById: Map<string, string>) => {
+  if (!["STATUS_CHANGED", "PRIORITY_CHANGED", "ASSIGNMENT_CHANGED"].includes(activity.event_type)) return null;
+  const previous = storedValue(activity.previous_value);
+  const next = storedValue(activity.new_value);
+  if (activity.event_type === "ASSIGNMENT_CHANGED") return `${previous ? staffById.get(previous) ?? "Unknown" : "Unassigned"} → ${next ? staffById.get(next) ?? "Unknown" : "Unassigned"}`;
+  return `${previous ? serviceRequestLabel(previous) : "Unknown"} → ${next ? serviceRequestLabel(next) : "Unknown"}`;
+};
 
 export default async function Page({ params }: { params: Promise<{ serviceRequestId: string }> }) {
   const [{ serviceRequestId }, data, access] = await Promise.all([params, getLiveOrganizationData(), getAccessContext()]);
   const item = data.serviceRequests.find((request) => request.id === serviceRequestId);
   if (!item) notFound();
   const assignees = data.staff.filter((staff) => ["BUSINESS_OWNER", "BUSINESS_ADMIN", "STAFF_MANAGER", "STAFF_USER"].includes(staff.membership.role)).map((staff) => ({ id: staff.profile.id, name: displayName(staff.profile) }));
+  const staffById = new Map(data.staff.map((staff) => [staff.profile.id, displayName(staff.profile)]));
   const assignmentRoles = ["BUSINESS_OWNER", "BUSINESS_ADMIN", "STAFF_MANAGER"];
   const canAssign = Boolean(access?.isSuperAdmin || assignmentRoles.includes(access?.activeOrganization?.role ?? "") || data.staff.some((staff) => staff.profile.id === access?.user.id && assignmentRoles.includes(staff.membership.role)));
   const supabase = await createClient();
@@ -31,7 +42,7 @@ export default async function Page({ params }: { params: Promise<{ serviceReques
         <div><dt>Last Updated</dt><dd>{new Date(item.updated_at).toLocaleString()}</dd></div>
         <div className="full"><dt>Description</dt><dd className="description">{item.description}</dd></div>
       </dl><ServiceRequestEditControls requestId={item.id} initial={{ status: item.status, priority: item.priority, assignedUserId: item.assigned_user_id ?? "" }} assignees={assignees} canAssign={canAssign} /></section>
-      <aside className="panel detail-section"><h2>Activity</h2>{activities.length ? <div className="activity-list">{activities.map((activity) => { const actorLabel = activity.actor_display_name || activity.actor_email || activity.actor_user_id || "System"; return <article key={activity.id}><span className="activity-dot">•</span><div><p>{activity.event_type.replaceAll("_", " ")}</p><span>{actorLabel} · {new Date(activity.occurred_at).toLocaleString()}</span></div></article>; })}</div> : <p className="muted">No activity recorded yet.</p>}</aside>
+      <aside className="panel detail-section"><h2>Activity</h2>{activities.length ? <div className="activity-list">{activities.map((activity) => { const actorLabel = activity.actor_display_name || activity.actor_email || activity.actor_user_id || "System"; const transition = transitionText(activity, staffById); return <article key={activity.id}><span className="activity-dot">•</span><div><p>{activity.event_type.replaceAll("_", " ")}</p><span>{actorLabel} · {new Date(activity.occurred_at).toLocaleString()}</span>{transition && <small className="activity-transition">{transition}</small>}</div></article>; })}</div> : <p className="muted">No activity recorded yet.</p>}</aside>
     </div><Link className="auth-link" href="/service-desk">← All service requests</Link>
   </>;
 }
