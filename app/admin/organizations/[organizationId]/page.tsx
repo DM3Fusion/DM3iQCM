@@ -19,6 +19,8 @@ const roles = [
   "STAFF_MANAGER",
   "STAFF_USER",
 ] as const;
+const runtimeYear = () => new Date().getUTCFullYear();
+const runtimeNow = () => Date.now();
 export default async function Page({
   params,
   searchParams,
@@ -27,10 +29,24 @@ export default async function Page({
   searchParams: Promise<{ message?: string; error?: string }>;
 }) {
   const [{ organizationId }, query] = await Promise.all([params, searchParams]);
-  const { organization, members } =
+  const { organization, members, cases, customers } =
     await getOrganizationAdministration(organizationId);
   const license = organization.license;
   const effective = effectiveLicense(license && { status: license.license_status, commercialState: license.commercial_state, startsAt: license.starts_at, expiresAt: license.expires_at, graceEndsAt: license.grace_ends_at, noticeDays: license.notice_days });
+  const drilldown = (query as { drilldown?: string }).drilldown;
+  const year = Number((query as { year?: string }).year) || runtimeYear();
+  const activity = (query as { activity?: string }).activity ?? "all";
+  const terminal = ["COMPLETED", "CLOSED", "CANCELLED"];
+  const yearStart = Date.UTC(year, 0, 1);
+  const yearEnd = Date.UTC(year + 1, 0, 1);
+  const activityStart = activity === "7" ? runtimeNow() - 7 * 86400000 : activity === "30" ? runtimeNow() - 30 * 86400000 : activity === "90" ? runtimeNow() - 90 * 86400000 : activity === "year" ? yearStart : 0;
+  const inRange = (value: string) => (query as { year?: string }).year === "all" || (Date.parse(value) >= yearStart && Date.parse(value) < yearEnd);
+  const activeCases = cases.filter((item) => !terminal.includes(item.status) && inRange(item.created_at) && (!activityStart || Date.parse(item.updated_at) >= activityStart));
+  const filteredCustomers = customers.filter((item) => inRange(item.created_at) && (!activityStart || Date.parse(item.updated_at) >= activityStart));
+  const years = [...new Set([...cases, ...customers].map((item) => new Date(item.created_at).getUTCFullYear()))].sort((a, b) => b - a);
+  const openStatuses = [...new Set(cases.filter((item) => !terminal.includes(item.status)).map((item) => item.status))];
+  const selectedStatus = (query as { status?: string }).status ?? "all";
+  const displayedCases = selectedStatus === "all" ? activeCases : activeCases.filter((item) => item.status === selectedStatus);
   return (
     <>
       <PageHeader
@@ -122,14 +138,21 @@ export default async function Page({
               <dd>{organization.businessAdmins} / 2</dd>
             </div>
             <div>
-              <dt>Customers</dt>
+              <dt><a className="summary-drilldown-link" href={`?drilldown=customers&year=${year}&activity=${activity}`}>Customers</a></dt>
               <dd>{organization.customers}</dd>
             </div>
             <div>
-              <dt>Open cases</dt>
+              <dt><a className="summary-drilldown-link" href={`?drilldown=cases&year=${year}&activity=${activity}`}>Open cases</a></dt>
               <dd>{organization.openCases}</dd>
             </div>
+            <div><dt>Last activity</dt><dd>{organization.lastActivity ? new Date(organization.lastActivity).toLocaleString() : "No activity yet"}</dd></div>
           </dl>
+          {drilldown ? <section className="organization-drilldown">
+            <div className="section-head"><div><h3>{drilldown === "cases" ? "Open cases" : "Customers"}</h3><p>{drilldown === "cases" ? `${displayedCases.length} matching cases` : `${filteredCustomers.length} matching customers`}</p></div><Link href={`?`}>Close</Link></div>
+            <form className="filters" method="get"><input type="hidden" name="drilldown" value={drilldown}/><select name="year" defaultValue={String((query as { year?: string }).year ?? year)}><option value={String(runtimeYear())}>This year</option>{years.filter((item) => item !== runtimeYear()).map((item) => <option key={item} value={item}>{item}</option>)}<option value="all">All years</option></select><select name="activity" defaultValue={activity}><option value="all">All activity</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="90">Last 90 days</option><option value="year">This calendar year</option></select>{drilldown === "cases" ? <select name="status" defaultValue={selectedStatus}><option value="all">All open statuses</option>{openStatuses.map((item) => <option key={item} value={item}>{item.replaceAll("_", " ")}</option>)}</select> : null}<button className="filter-button">Apply</button></form>
+            <div className="table-scroll"><table><thead><tr>{drilldown === "cases" ? <><th>Case</th><th>Customer</th><th>Status</th><th>Last activity</th><th>Created</th></> : <><th>Customer</th><th>Contact</th><th>Last activity</th><th>Created</th></>}</tr></thead><tbody>{drilldown === "cases" ? displayedCases.map((item) => <tr key={item.id}><td>{item.case_number} · {item.title}</td><td>{customers.find((customer) => customer.id === item.customer_id)?.name ?? "—"}</td><td><Badge value={item.status}/></td><td>{new Date(item.updated_at).toLocaleString()}</td><td>{new Date(item.created_at).toLocaleDateString()}</td></tr>) : filteredCustomers.map((item) => <tr key={item.id}><td>{item.name}</td><td>{item.email || item.phone || "—"}</td><td>{new Date(item.updated_at).toLocaleString()}</td><td>{new Date(item.created_at).toLocaleDateString()}</td></tr>)}</tbody></table></div>
+            {((drilldown === "cases" && !displayedCases.length) || (drilldown !== "cases" && !filteredCustomers.length)) ? <div className="no-results">No matching {drilldown === "cases" ? "open cases" : "customers"} for this filter.</div> : null}
+          </section> : null}
         </aside>
       </div>
       <section className="panel detail-section">

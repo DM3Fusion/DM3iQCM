@@ -22,3 +22,14 @@ test("organization sidebar shows canonical profile display name with safe fallba
   assert.match(context, /user\.email \|\|\n      "User"/);
   assert.match(shell, /SUPER ADMIN/);
 });
+test("organization administration exposes live activity drilldowns",()=>{
+  const page = readFileSync("app/admin/organizations/[organizationId]/page.tsx", "utf8");
+  const repository = readFileSync("lib/data/platform-repository.ts", "utf8");
+  assert.match(page, /Last activity/);
+  assert.match(page, /drilldown=cases/);
+  assert.match(page, /drilldown=customers/);
+  assert.match(page, /COMPLETED.*CLOSED.*CANCELLED/);
+  assert.match(page, /This calendar year/);
+  assert.match(repository, /lastActivity/);
+  assert.match(repository, /openCases: data\.cases\.filter/);
+});

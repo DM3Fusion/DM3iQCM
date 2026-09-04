@@ -19,6 +19,7 @@ export interface OrganizationAdminRow extends OrganizationRow {
   businessAdmins: number;
   openCases: number;
   customers: number;
+  lastActivity: string | null;
 }
 export interface MemberAdminRow extends MembershipRow {
   profile: AvatarProfileRow;
@@ -65,8 +66,8 @@ async function loadPlatformData() {
     supabase.from("profiles").select("*").order("display_name"),
     supabase.from("platform_user_roles").select("*"),
     supabase.from("customer_portal_users").select("*"),
-    supabase.from("cases").select("id,organization_id,status"),
-    supabase.from("customers").select("id,organization_id"),
+    supabase.from("cases").select("*"),
+    supabase.from("customers").select("*"),
   ]);
   const licenseQuery = await (supabase as any).from("organization_licenses").select("*").eq("is_current", true).order("created_at", { ascending: false });
   if (licenseQuery.error) {
@@ -126,6 +127,11 @@ export async function getPlatformAdministration() {
         ).length,
         customers: data.customers.filter((c) => c.organization_id === org.id)
           .length,
+        lastActivity: [...data.cases.filter((c) => c.organization_id === org.id), ...data.customers.filter((c) => c.organization_id === org.id)]
+          .map((item) => item.updated_at ?? item.created_at)
+          .filter(Boolean)
+          .sort()
+          .at(-1) ?? null,
       };
     },
   );
@@ -195,7 +201,7 @@ export async function getOrganizationAdministration(id: string) {
       const profile = base.profiles.find((p) => p.id === m.user_id);
       return profile ? [{ ...m, profile }] : [];
     });
-  return { organization, members };
+  return { organization, members, cases: base.cases.filter((c) => c.organization_id === id), customers: base.customers.filter((c) => c.organization_id === id) };
 }
 export async function getPlatformUser(id: string) {
   const data = await getPlatformAdministration();
