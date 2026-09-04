@@ -68,3 +68,18 @@ test("service request RLS helper grants only authenticated execution", () => {
   assert.match(migration, /service_requests_select[\s\S]*can_access_service_request/);
   assert.match(migration, /revoke insert,update,delete on public\.service_requests from authenticated/);
 });
+
+test("service request detail identity RPC is narrowly secured", () => {
+  const identityMigration = readFileSync("supabase/migrations/20260904130000_dm3iqcm_service_request_identity_resolution.sql", "utf8");
+  assert.match(identityMigration, /get_service_request_detail_activity\(target_service_request_id uuid\)/);
+  assert.match(identityMigration, /security definer/);
+  assert.match(identityMigration, /set search_path = ''/);
+  assert.match(identityMigration, /can_access_service_request\(target_service_request_id, target_organization_id, actor\)/);
+  assert.match(identityMigration, /creator_display_name/);
+  assert.match(identityMigration, /actor_display_name/);
+  assert.match(identityMigration, /previous_value/);
+  assert.match(identityMigration, /new_value/);
+  assert.match(identityMigration, /occurred_at/);
+  assert.match(identityMigration, /revoke all on function public\.get_service_request_detail_activity\(uuid\) from public, anon/);
+  assert.match(identityMigration, /grant execute on function public\.get_service_request_detail_activity\(uuid\) to authenticated/);
+});
