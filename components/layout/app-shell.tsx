@@ -43,6 +43,7 @@ const platformNav = [
 ];
 const isPublic = (path: string) =>
   path === "/login" ||
+  path === "/portal" || path.startsWith("/portal/") ||
   path.startsWith("/auth/");
 export function AppShell({
   children,

@@ -1,0 +1,32 @@
+"use server";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
+import { ACTIVE_PORTAL_ACCESS_COOKIE, requireCustomerPortalContext } from "@/lib/auth/customer-portal";
+import { createClient } from "@/lib/supabase/server";
+
+export async function selectPortalAccountAction(form: FormData) {
+  const id = String(form.get("portalAccessId") ?? "");
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
+  const { data } = await supabase.from("customer_portal_users").select("id").eq("id", id).eq("user_id", user.id).eq("is_active", true).maybeSingle();
+  if (!data) redirect("/portal/select-account");
+  (await cookies()).set(ACTIVE_PORTAL_ACCESS_COOKIE, id, { httpOnly: true, sameSite: "lax", secure: process.env.NODE_ENV === "production", path: "/" });
+  redirect("/portal");
+}
+
+export async function createCustomerServiceRequestAction(form: FormData): Promise<void> {
+  const context = await requireCustomerPortalContext();
+  if (context.settings?.portal_submission_enabled === false) redirect("/portal/service-requests?error=Customer%20submissions%20are%20currently%20disabled.");
+  const subject = String(form.get("subject") ?? "").trim();
+  const description = String(form.get("description") ?? "").trim();
+  if (!subject || !description) redirect("/portal/service-requests/new?error=Subject%20and%20description%20are%20required.");
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("create_customer_service_request" as never, { target_portal_access_id: context.access.id, target_subject: subject, target_description: description } as never);
+  if (error || !data) redirect("/portal/service-requests/new?error=The%20service%20request%20could%20not%20be%20submitted.");
+  revalidatePath("/portal");
+  revalidatePath("/portal/service-requests");
+  const request = data as unknown as { id: string };
+  redirect(`/portal/service-requests/${request.id}`);
+}

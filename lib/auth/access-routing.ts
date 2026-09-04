@@ -3,13 +3,15 @@ export interface AccessRoutingState {
   internalAccess: boolean;
   provisioned: boolean;
   hasActiveOrganization: boolean;
+  customerPortalCount?: number;
 }
 
-export type RootExperience = "PLATFORM" | "ORGANIZATION" | "UNPROVISIONED";
+export type RootExperience = "PLATFORM" | "ORGANIZATION" | "PORTAL" | "UNPROVISIONED";
 
 export function resolveRootExperience(access: AccessRoutingState): RootExperience {
   if (access.isSuperAdmin && !access.hasActiveOrganization) return "PLATFORM";
   if (access.internalAccess && access.hasActiveOrganization) return "ORGANIZATION";
+  if ((access.customerPortalCount ?? 0) > 0) return "PORTAL";
   return "UNPROVISIONED";
 }
 

@@ -24,6 +24,7 @@ export interface AccessContext {
   organizations: AuthorizedOrganization[];
   activeOrganization: AuthorizedOrganization | null;
   customerPortalIds: string[];
+  customerPortalCount: number;
   provisioned: boolean;
   internalAccess: boolean;
   license: (LicenseSnapshot & ReturnType<typeof effectiveLicense>) | null;
@@ -140,6 +141,7 @@ export async function getAccessContext(): Promise<AccessContext | null> {
       organizations,
       activeOrganization,
       customerPortalIds,
+      customerPortalCount: customerPortalIds.length,
       provisioned:
         isSuperAdmin ||
         organizations.length > 0 ||
