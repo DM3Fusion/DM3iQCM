@@ -228,8 +228,9 @@ export async function resendUserInviteAction(form: FormData) {
   if (error) { console.error("Invitation resend failed", { code: error.code, message: error.message }); return { ok: false, error: "Unable to resend invitation." }; }
   return { ok: true };
 }
-export async function getInvitationEligibility(userId: string) {
-  await requireSuperAdmin();
+export async function getInvitationEligibility(userId: string, organizationId?: string) {
+  const access = await getAccessContext();
+  if (!access?.user || (!access.isSuperAdmin && (!organizationId || !["BUSINESS_OWNER", "BUSINESS_ADMIN"].includes(access.organizations.find((o) => o.id === organizationId)?.role ?? "")))) return false;
   try { const admin = createAdminClient(); const { data, error } = await admin.auth.admin.getUserById(userId); const user = data?.user; return !error && Boolean(user?.email) && !user?.email_confirmed_at && !user?.last_sign_in_at; } catch { return false; }
 }
 export async function updateUserProfileAction(form: FormData) {

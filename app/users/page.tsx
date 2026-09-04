@@ -1,1 +1,13 @@
-import { EmptyFoundation, PageHeader } from "@/components/ui"; export default function Page(){return <><PageHeader eyebrow="Organization" title="Users" description="Manage the people who serve customers and complete case work."/><EmptyFoundation icon="♧" title="User administration is ready" description="Invitations, access lifecycle, and role assignments will arrive with authentication."/></>}
+import { PageHeader, Badge } from "@/components/ui";
+import { UserAvatar } from "@/components/user-avatar";
+import { ResendInviteButton } from "@/components/resend-invite-button";
+import { requireInternalContext } from "@/lib/auth/context";
+import { createClient } from "@/lib/supabase/server";
+import { getInvitationEligibility } from "@/lib/data/user-invitation-actions";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+export default async function Page(){
+ const {activeOrganization:org}=await requireInternalContext(); const supabase=await createClient();
+ const {data:members}=await supabase.from("organization_members").select("id,user_id,role,is_active,joined_at,profiles(id,email,display_name,avatar_path)").eq("organization_id",org.id).order("joined_at");
+ const rows=members??[]; const eligible=await Promise.all(rows.map(async m=>[m.user_id,await getInvitationEligibility(m.user_id,org.id)] as const));
+ return <><PageHeader eyebrow="Organization" title="Users" description="Manage the people who serve customers and complete case work."/><section className="panel"><div className="table-scroll"><table><thead><tr><th>User</th><th>Role</th><th>Status</th><th>Invitation</th></tr></thead><tbody>{rows.map((m:any)=>{const profile=Array.isArray(m.profiles)?m.profiles[0]:m.profiles; return <tr key={m.id}><td><span className="user-identity-cell"><UserAvatar displayName={profile?.display_name} email={profile?.email} size="sm"/><span>{profile?.display_name||profile?.email||"Unnamed user"}<small className="table-secondary">{profile?.email}</small></span></span></td><td>{m.role.replaceAll("_"," ")}</td><td><Badge value={m.is_active?"ACTIVE":"INACTIVE"}/></td><td>{eligible.find(([id])=>id===m.user_id)?.[1]?<ResendInviteButton userId={m.user_id} organizationId={org.id}/>:"—"}</td></tr>})}</tbody></table></div></section></>;
+}
