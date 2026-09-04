@@ -105,12 +105,19 @@ export async function inviteUserAction(form: FormData) {
       display_name: displayName,
       is_active: active,
     });
-    if (profileError)
+    if (profileError) {
+      console.error("Existing Auth profile preparation failed", {
+        code: profileError.code,
+        message: profileError.message,
+        details: profileError.details,
+        hint: profileError.hint,
+      });
       go(
         "/admin/users/new",
         "error",
         "The existing Auth identity could not be prepared for application access.",
       );
+    }
     if (!organizationId)
       go(
         `/admin/users/${existingAuthUser.id}`,
@@ -163,6 +170,12 @@ export async function inviteUserAction(form: FormData) {
     is_active: active,
   });
   if (profileError) {
+    console.error("Invited user profile preparation failed", {
+      code: profileError.code,
+      message: profileError.message,
+      details: profileError.details,
+      hint: profileError.hint,
+    });
     await admin.auth.admin.deleteUser(userId);
     go(
       "/admin/users/new",
