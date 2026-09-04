@@ -77,16 +77,6 @@ test("SUPER_ADMIN identity updates Auth email before synchronizing the profile",
   assert.match(page, /Save identity/);
 });
 
-test("membership removal deactivates only the selected membership", () => {
-  const actions = readFileSync("lib/data/user-invitation-actions.ts", "utf8");
-  const page = readFileSync("app/admin/users/[userId]/page.tsx", "utf8");
-  assert.match(actions, /value\(form, "removeAccess"\) === "true"/);
-  assert.match(actions, /target_active:/);
-  assert.match(actions, /Organization access removed\./);
-  assert.match(page, /name="removeAccess"/);
-  assert.match(page, /Remove access/);
-});
-
 test("password and email-code login paths remain available", () => {
   const login = readFileSync("app/login/page.tsx", "utf8");
   assert.match(login, /signInAction/);

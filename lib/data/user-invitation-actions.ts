@@ -303,19 +303,10 @@ export async function updateUserMembershipAction(form: FormData) {
   const { error } = await session.rpc("update_organization_membership", {
     target_membership_id: value(form, "membershipId"),
     target_role: role,
-    target_active:
-      value(form, "removeAccess") === "true"
-        ? false
-        : value(form, "active") === "true",
+    target_active: value(form, "active") === "true",
   });
   if (error) go(path, "error", roleError(error.message));
   revalidatePath(path);
   revalidatePath("/admin/users");
-  go(
-    path,
-    "message",
-    value(form, "removeAccess") === "true"
-      ? "Organization access removed."
-      : "Membership updated.",
-  );
+  go(path, "message", "Membership updated.");
 }

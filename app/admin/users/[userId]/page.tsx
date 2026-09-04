@@ -245,15 +245,6 @@ export default async function Page({
                           <option value="false">Inactive</option>
                         </select>
                         <button>Save</button>
-                        {membership.active ? (
-                          <button
-                            name="removeAccess"
-                            value="true"
-                            type="submit"
-                          >
-                            Remove access
-                          </button>
-                        ) : null}
                       </form>
                     </td>
                   </NavigableRow>
