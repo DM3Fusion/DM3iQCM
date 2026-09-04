@@ -7,7 +7,7 @@ test("invitation redirect is explicitly marked and callback replaces stale local
   const callback = readFileSync("app/auth/callback/route.ts", "utf8");
   assert.match(admin, /auth\/callback\?flow=invite/);
   assert.match(callback, /flow.*invite/);
-  assert.match(callback, /signOut\(\{scope:"local"\}\)/);
+  assert.match(callback, /createServerClient/);
   assert.match(callback, /exchangeCodeForSession/);
   assert.match(callback, /getUser/);
   assert.match(callback, /ACTIVE_ORGANIZATION_COOKIE/);
