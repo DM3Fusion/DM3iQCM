@@ -8,6 +8,7 @@ const localDate = (raw: string) => { if (!raw) return null; const parsed = new D
 export async function saveLicenseAction(form:FormData){
   await requireSuperAdmin(); const id=value(form,"organizationId");
   if (!id || !value(form,"status") || !value(form,"commercialState")) return { ok:false, error:"License status and commercial state are required." };
+  if (!["STANDARD","ENTERPRISE","INTERNAL"].includes(value(form,"planCode"))) return { ok:false, error:"Select a valid license plan." };
   let startsAt:string|null, expiresAt:string|null, graceEndsAt:string|null;
   try { startsAt=localDate(value(form,"startsAt")); expiresAt=localDate(value(form,"expiresAt")); graceEndsAt=localDate(value(form,"graceEndsAt")); } catch { return { ok:false, error:"Enter valid license dates." }; }
   if (startsAt && expiresAt && expiresAt < startsAt) return { ok:false, error:"Expiration cannot precede the start date." };

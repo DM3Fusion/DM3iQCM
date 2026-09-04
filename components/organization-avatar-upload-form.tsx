@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import { MAX_AVATAR_SOURCE_BYTES, ORGANIZATION_AVATAR_SOURCE_BUCKET } from "@/lib/profile/avatar";
 import { normalizeOrganizationAvatarAction, removeOrganizationAvatarAction } from "@/lib/data/organization-avatar-actions";
 
-export function OrganizationAvatarUploadForm({ organizationId, hasAvatar }: { organizationId: string; hasAvatar: boolean }) {
+export function OrganizationAvatarUploadForm({ organizationId, hasAvatar, showUpload = true, showRemove = true }: { organizationId: string; hasAvatar: boolean; showUpload?: boolean; showRemove?: boolean }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -28,8 +28,8 @@ export function OrganizationAvatarUploadForm({ organizationId, hasAvatar }: { or
   }
   return <div className="organization-avatar-upload">
     <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp" hidden onChange={(event) => { const file = event.target.files?.[0]; if (file) void upload(file); event.currentTarget.value = ""; }} />
-    <button type="button" className="primary-button" disabled={busy} onClick={() => inputRef.current?.click()}>{busy ? "Processing…" : "Upload / Change"}</button>
-    {hasAvatar ? <form action={async (form) => { setBusy(true); setError(null); const result = await removeOrganizationAvatarAction(form); if (!result.ok) setError(result.error ?? "The organization avatar could not be removed."); else router.refresh(); setBusy(false); }}><input type="hidden" name="organizationId" value={organizationId} /><button type="submit" className="text-button" disabled={busy}>Remove</button></form> : null}
+    {showUpload ? <button type="button" className="primary-button" disabled={busy} onClick={() => inputRef.current?.click()}>{busy ? "Processing…" : "Upload / Change"}</button> : null}
+    {showRemove && hasAvatar ? <form action={async (form) => { setBusy(true); setError(null); const result = await removeOrganizationAvatarAction(form); if (!result.ok) setError(result.error ?? "The organization avatar could not be removed."); else router.refresh(); setBusy(false); }}><input type="hidden" name="organizationId" value={organizationId} /><button type="submit" className="text-button" disabled={busy}>Remove</button></form> : null}
     {error ? <p className="form-alert">{error}</p> : null}
   </div>;
 }

@@ -97,13 +97,13 @@ export default async function Page({
               </label>
             </div>
             <div className="form-actions">
-              <button className="primary-button">Save changes</button>
+              <span className="organization-form-actions"><OrganizationAvatarUploadForm organizationId={organization.id} hasAvatar={Boolean(organization.avatar_path)} showRemove={false} /><button className="primary-button">Save changes</button></span>
             </div>
           </form>
           <div id="organization-avatar" className="organization-avatar-panel">
             <OrganizationAvatar name={organization.name} src={organization.avatarUrl} size="md" />
             <div><strong>Organization avatar</strong><p>Private identity shown in the workspace.</p></div>
-            <OrganizationAvatarUploadForm organizationId={organization.id} hasAvatar={Boolean(organization.avatar_path)} />
+            <OrganizationAvatarUploadForm organizationId={organization.id} hasAvatar={Boolean(organization.avatar_path)} showUpload={false} />
           </div>
         </section>
         <aside className="panel detail-section admin-summary">
