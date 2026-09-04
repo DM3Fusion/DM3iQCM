@@ -83,8 +83,8 @@ export default async function Page({
                   />
                 )}
                 <span>
-                  <h2>Profile</h2>
-                  <p>User-level identity shared across organizations</p>
+                  <h2>Platform identity</h2>
+                  <p>Auth and profile identity shared across organizations</p>
                 </span>
               </span>
             </div>
@@ -102,6 +102,15 @@ export default async function Page({
                 />
               </label>
               <label>
+                <span>Email</span>
+                <input
+                  name="email"
+                  type="email"
+                  defaultValue={user.email ?? ""}
+                  required
+                />
+              </label>
+              <label>
                 <span>Profile state</span>
                 <select name="active" defaultValue={String(user.is_active)}>
                   <option value="true">Active</option>
@@ -110,7 +119,7 @@ export default async function Page({
               </label>
             </div>
             <div className="form-actions">
-              <button className="primary-button">Save profile</button>
+              <button className="primary-button">Save identity</button>
             </div>
           </form>
         </section>
@@ -140,7 +149,7 @@ export default async function Page({
         <div className="section-head">
           <div>
             <h2>Organization memberships</h2>
-            <p>Platform roles and customer portal access remain separate.</p>
+            <p>Organization access is separate from the platform identity above.</p>
           </div>
         </div>
         {activeOrganizations.length ? (
@@ -236,6 +245,15 @@ export default async function Page({
                           <option value="false">Inactive</option>
                         </select>
                         <button>Save</button>
+                        {membership.active ? (
+                          <button
+                            name="removeAccess"
+                            value="true"
+                            type="submit"
+                          >
+                            Remove access
+                          </button>
+                        ) : null}
                       </form>
                     </td>
                   </NavigableRow>

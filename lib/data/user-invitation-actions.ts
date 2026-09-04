@@ -207,22 +207,62 @@ export async function inviteUserAction(form: FormData) {
 export async function updateUserProfileAction(form: FormData) {
   await requireSuperAdmin();
   const userId = value(form, "userId");
+  const email = value(form, "email").toLowerCase();
+  if (!userId || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))
+    go(`/admin/users/${userId}`, "error", "Enter a valid email address.");
   const admin = adminClient(`/admin/users/${userId}`);
-  const { error } = await admin
+  const { data: duplicate } = await admin
     .from("profiles")
-    .update({
-      display_name: value(form, "displayName"),
-      is_active: value(form, "active") === "true",
-    })
-    .eq("id", userId);
-  if (error)
+    .select("id")
+    .ilike("email", email)
+    .neq("id", userId)
+    .maybeSingle();
+  if (duplicate)
     go(
       `/admin/users/${userId}`,
       "error",
-      "The user profile could not be updated.",
+      "A user with this email already exists.",
     );
+  const { data: authUser, error: authError } =
+    await admin.auth.admin.updateUserById(userId, { email });
+  if (authError || !authUser.user) {
+    console.error("Auth identity email update failed", {
+      code: authError?.code,
+      message: authError?.message,
+      userId,
+    });
+    go(
+      `/admin/users/${userId}`,
+      "error",
+      authError?.message.toLowerCase().includes("already")
+        ? "A user with this email already exists."
+        : "The Auth email could not be updated.",
+    );
+  }
+  const { error: profileError } = await admin
+    .from("profiles")
+    .update({
+      display_name: value(form, "displayName"),
+      email,
+      is_active: value(form, "active") === "true",
+    })
+    .eq("id", userId);
+  if (profileError) {
+    console.error("Auth email updated but profile synchronization failed", {
+      code: profileError.code,
+      message: profileError.message,
+      details: profileError.details,
+      hint: profileError.hint,
+      userId,
+    });
+    go(
+      `/admin/users/${userId}`,
+      "error",
+      "Auth email updated, but the application profile could not be synchronized. Contact support.",
+    );
+  }
   revalidatePath("/admin/users");
-  redirect(`/admin/users/${userId}?message=User%20profile%20updated.`);
+  redirect(`/admin/users/${userId}?message=User%20identity%20updated.`);
 }
 export async function addUserMembershipAction(form: FormData) {
   await requireSuperAdmin();
@@ -263,10 +303,19 @@ export async function updateUserMembershipAction(form: FormData) {
   const { error } = await session.rpc("update_organization_membership", {
     target_membership_id: value(form, "membershipId"),
     target_role: role,
-    target_active: value(form, "active") === "true",
+    target_active:
+      value(form, "removeAccess") === "true"
+        ? false
+        : value(form, "active") === "true",
   });
   if (error) go(path, "error", roleError(error.message));
   revalidatePath(path);
   revalidatePath("/admin/users");
-  go(path, "message", "Membership updated.");
+  go(
+    path,
+    "message",
+    value(form, "removeAccess") === "true"
+      ? "Organization access removed."
+      : "Membership updated.",
+  );
 }

@@ -66,6 +66,27 @@ test("Admin Auth credential is server-only and actions require SUPER_ADMIN", () 
   assert.match(actions, /deleteUser\(userId\)/);
 });
 
+test("SUPER_ADMIN identity updates Auth email before synchronizing the profile", () => {
+  const actions = readFileSync("lib/data/user-invitation-actions.ts", "utf8");
+  const page = readFileSync("app/admin/users/[userId]/page.tsx", "utf8");
+  assert.match(actions, /updateUserById\(userId, \{ email \}\)/);
+  assert.match(actions, /Auth email updated but profile synchronization failed/);
+  assert.match(actions, /\.ilike\("email", email\)/);
+  assert.match(actions, /email,\n      is_active/);
+  assert.match(page, /name="email"/);
+  assert.match(page, /Save identity/);
+});
+
+test("membership removal deactivates only the selected membership", () => {
+  const actions = readFileSync("lib/data/user-invitation-actions.ts", "utf8");
+  const page = readFileSync("app/admin/users/[userId]/page.tsx", "utf8");
+  assert.match(actions, /value\(form, "removeAccess"\) === "true"/);
+  assert.match(actions, /target_active:/);
+  assert.match(actions, /Organization access removed\./);
+  assert.match(page, /name="removeAccess"/);
+  assert.match(page, /Remove access/);
+});
+
 test("password and email-code login paths remain available", () => {
   const login = readFileSync("app/login/page.tsx", "utf8");
   assert.match(login, /signInAction/);
