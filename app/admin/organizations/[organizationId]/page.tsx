@@ -11,7 +11,7 @@ import {
   updateOrganizationAction,
 } from "@/lib/data/platform-actions";
 import { getOrganizationAdministration } from "@/lib/data/platform-repository";
-import { saveLicenseAction } from "@/lib/data/license-actions";
+import { LicenseForm } from "@/components/license-form";
 import { effectiveLicense } from "@/lib/licensing";
 const roles = [
   "BUSINESS_OWNER",
@@ -134,7 +134,7 @@ export default async function Page({
       </div>
       <section className="panel detail-section">
         <div className="section-head"><div><h2>License / Subscription</h2><p>Platform-managed entitlement and commercial state.</p></div><Badge value={effective.status} /></div>
-        <form action={saveLicenseAction} className="entity-form"><input type="hidden" name="organizationId" value={organization.id}/><div className="form-grid"><label><span>License status</span><select name="status" defaultValue={license?.license_status ?? "TRIAL"}>{["TRIAL","ACTIVE","EXPIRING","EXPIRED","SUSPENDED","CANCELLED"].map((v)=><option key={v}>{v}</option>)}</select></label><label><span>Commercial state</span><select name="commercialState" defaultValue={license?.commercial_state ?? "TRIAL"}>{["TRIAL","PAID","UNPAID","COMP","INTERNAL"].map((v)=><option key={v}>{v}</option>)}</select></label><label><span>Plan</span><input name="planCode" defaultValue={license?.plan_code ?? "STANDARD"}/></label><label><span>Start date</span><input type="datetime-local" name="startsAt" defaultValue={license?.starts_at?.slice(0,16)}/></label><label><span>Expiration date</span><input type="datetime-local" name="expiresAt" defaultValue={license?.expires_at?.slice(0,16)}/></label><label><span>Grace end date</span><input type="datetime-local" name="graceEndsAt" defaultValue={license?.grace_ends_at?.slice(0,16)}/></label><label className="full"><span>Notes</span><textarea name="notes" defaultValue={license?.notes ?? ""}/></label></div><p className="table-secondary">{effective.daysRemaining === null ? "No expiration date" : `${effective.daysRemaining} days remaining`}{effective.isInGrace ? " · Grace period active" : ""}</p><div className="form-actions"><button className="primary-button">Save license</button></div></form>
+        <LicenseForm organizationId={organization.id} license={license} />
       </section>
       <section className="panel">
         <div className="section-head">
