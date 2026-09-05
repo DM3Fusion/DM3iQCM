@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { ACTIVE_PORTAL_ACCESS_COOKIE, requireCustomerPortalContext } from "@/lib/auth/customer-portal";
 import { createClient } from "@/lib/supabase/server";
+import { recordPortalCommunication } from "@/lib/data/communication-service";
+import { notifyStaffOfCustomerReply } from "@/lib/data/communication-service";
 
 export async function selectPortalAccountAction(form: FormData) {
   const id = String(form.get("portalAccessId") ?? "");
@@ -32,14 +34,17 @@ export async function createCustomerServiceRequestAction(form: FormData): Promis
 }
 
 export async function createCustomerServiceRequestMessageAction(form: FormData): Promise<void> {
-  await requireCustomerPortalContext();
+  const context = await requireCustomerPortalContext();
   const serviceRequestId = String(form.get("serviceRequestId") ?? "");
   const body = String(form.get("body") ?? "").trim();
   if (!serviceRequestId || !body) redirect(`/portal/service-requests/${serviceRequestId}?error=Reply%20cannot%20be%20blank.`);
   if (body.length > 4000) redirect(`/portal/service-requests/${serviceRequestId}?error=Reply%20must%20be%204000%20characters%20or%20fewer.`);
   const supabase = await createClient();
-  const { error } = await supabase.rpc("create_customer_service_request_message" as never, { target_service_request_id: serviceRequestId, target_body: body } as never);
-  if (error) redirect(`/portal/service-requests/${serviceRequestId}?error=The%20reply%20could%20not%20be%20sent.`);
+  const { data: created, error } = await supabase.rpc("create_customer_service_request_message" as never, { target_service_request_id: serviceRequestId, target_body: body } as never);
+  if (error || !created) redirect(`/portal/service-requests/${serviceRequestId}?error=The%20reply%20could%20not%20be%20sent.`);
+  const message = created as unknown as { id: string; organization_id: string };
+  await recordPortalCommunication({ organizationId: message.organization_id, serviceRequestId, messageId: message.id, actorUserId: context.user.id, direction: "INBOUND" });
+  await notifyStaffOfCustomerReply({ organizationId: message.organization_id, serviceRequestId, messageId: message.id });
   revalidatePath(`/portal/service-requests/${serviceRequestId}`);
   redirect(`/portal/service-requests/${serviceRequestId}`);
 }
