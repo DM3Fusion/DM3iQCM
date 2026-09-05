@@ -1,6 +1,9 @@
 import { getCustomerPortalContext } from "@/lib/auth/customer-portal";
 import { redirect } from "next/navigation";
 import PortalNav from "@/components/portal-nav";
+import type { Viewport } from "next";
+
+export const viewport: Viewport = { viewportFit: "cover" };
 
 function PortalHeader({ hasMultipleAccounts, enabled = true }: { hasMultipleAccounts: boolean; enabled?: boolean }) {
   return <header className="portal-header"><div><strong>DM3iQ™</strong><small>Customer Portal</small></div><PortalNav hasMultipleAccounts={hasMultipleAccounts} enabled={enabled} /></header>;
