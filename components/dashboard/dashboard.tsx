@@ -49,7 +49,7 @@ export function Dashboard({ data }: { data: LiveOrganizationData }) {
   ).length;
   return (
     <>
-      <div className="metric-grid">
+      <section className="dashboard-metric-section"><h2>Casework</h2><div className="metric-grid">
         {metrics.map((m, i) => (
           <article className={`metric tone-${m.tone}`} key={m.label}>
             <div>
@@ -68,10 +68,10 @@ export function Dashboard({ data }: { data: LiveOrganizationData }) {
             </small>
           </article>
         ))}
-      </div>
-      <div className="metric-grid service-metrics">
+      </div></section>
+      <section className="dashboard-metric-section"><h2>Service Requests</h2><div className="metric-grid service-metrics">
         {serviceMetrics.map((metric) => <Link className={`metric tone-${metric.tone}`} href="/service-desk" key={metric.label}><div><span>{metric.label}</span><strong>{metric.value}</strong></div><span className="metric-icon">⌁</span><small>Current Service Desk workload</small></Link>)}
-      </div>
+      </div></section>
       <section className="panel">
         <div className="section-head">
           <div>
