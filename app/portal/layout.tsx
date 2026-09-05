@@ -10,6 +10,6 @@ export default async function PortalLayout({ children }: { children: React.React
   const context = await getCustomerPortalContext();
   if (!context?.links?.length || context.reason === "NO_ACTIVE_PORTAL_ACCESS") redirect("/account/unprovisioned");
   if (context.reason === "ACCOUNT_SELECTION_REQUIRED") redirect("/portal/select-account");
-  if (!context.access) return <><PortalHeader hasMultipleAccounts={false} enabled={false} /><main><section className="portal-panel"><h1>{context.reason === "PORTAL_DISABLED" ? "Portal unavailable" : "Portal temporarily unavailable"}</h1><p>This customer portal is currently unavailable for the selected organization.</p></section></main></>;
-  return <><PortalHeader hasMultipleAccounts={context.links.length > 1} /><main>{children}</main></>;
+  if (!context.access) return <><PortalHeader hasMultipleAccounts={false} enabled={false} /><main className="portal-main"><section className="portal-panel"><h1>{context.reason === "PORTAL_DISABLED" ? "Portal unavailable" : "Portal temporarily unavailable"}</h1><p>This customer portal is currently unavailable for the selected organization.</p></section></main></>;
+  return <><PortalHeader hasMultipleAccounts={context.links.length > 1} /><main className="portal-main">{children}</main></>;
 }
