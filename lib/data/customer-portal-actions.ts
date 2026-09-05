@@ -30,3 +30,16 @@ export async function createCustomerServiceRequestAction(form: FormData): Promis
   const request = data as unknown as { id: string };
   redirect(`/portal/service-requests/${request.id}`);
 }
+
+export async function createCustomerServiceRequestMessageAction(form: FormData): Promise<void> {
+  await requireCustomerPortalContext();
+  const serviceRequestId = String(form.get("serviceRequestId") ?? "");
+  const body = String(form.get("body") ?? "").trim();
+  if (!serviceRequestId || !body) redirect(`/portal/service-requests/${serviceRequestId}?error=Reply%20cannot%20be%20blank.`);
+  if (body.length > 4000) redirect(`/portal/service-requests/${serviceRequestId}?error=Reply%20must%20be%204000%20characters%20or%20fewer.`);
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("create_customer_service_request_message" as never, { target_service_request_id: serviceRequestId, target_body: body } as never);
+  if (error) redirect(`/portal/service-requests/${serviceRequestId}?error=The%20reply%20could%20not%20be%20sent.`);
+  revalidatePath(`/portal/service-requests/${serviceRequestId}`);
+  redirect(`/portal/service-requests/${serviceRequestId}`);
+}
