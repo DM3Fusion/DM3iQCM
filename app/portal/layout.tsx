@@ -1,5 +1,15 @@
-import Link from "next/link";
 import { getCustomerPortalContext } from "@/lib/auth/customer-portal";
 import { redirect } from "next/navigation";
-import { signOutAction } from "@/lib/auth/actions";
-export default async function PortalLayout({ children }: { children: React.ReactNode }) { const context = await getCustomerPortalContext(); if (!context?.links?.length || context.reason === "NO_ACTIVE_PORTAL_ACCESS") redirect("/account/unprovisioned"); if (context.reason === "ACCOUNT_SELECTION_REQUIRED") redirect("/portal/select-account"); if (!context.access) return <><header className="portal-header"><div><strong>DM3iQ™</strong><small>Customer Portal</small></div><nav><form action={signOutAction}><button type="submit">Sign Out</button></form></nav></header><main><section className="portal-panel"><h1>{context.reason === "PORTAL_DISABLED" ? "Portal unavailable" : "Portal temporarily unavailable"}</h1><p>This customer portal is currently unavailable for the selected organization.</p></section></main></>; return <><header className="portal-header"><div><strong>DM3iQ™</strong><small>Customer Portal</small></div><nav><Link href="/portal">Home</Link><Link href="/portal/service-requests">Service Requests</Link>{context.links.length > 1 && <Link href="/portal/select-account">Switch account</Link>}<form action={signOutAction}><button type="submit">Sign Out</button></form></nav></header><main>{children}</main></>; }
+import PortalNav from "@/components/portal-nav";
+
+function PortalHeader({ hasMultipleAccounts, enabled = true }: { hasMultipleAccounts: boolean; enabled?: boolean }) {
+  return <header className="portal-header"><div><strong>DM3iQ™</strong><small>Customer Portal</small></div><PortalNav hasMultipleAccounts={hasMultipleAccounts} enabled={enabled} /></header>;
+}
+
+export default async function PortalLayout({ children }: { children: React.ReactNode }) {
+  const context = await getCustomerPortalContext();
+  if (!context?.links?.length || context.reason === "NO_ACTIVE_PORTAL_ACCESS") redirect("/account/unprovisioned");
+  if (context.reason === "ACCOUNT_SELECTION_REQUIRED") redirect("/portal/select-account");
+  if (!context.access) return <><PortalHeader hasMultipleAccounts={false} enabled={false} /><main><section className="portal-panel"><h1>{context.reason === "PORTAL_DISABLED" ? "Portal unavailable" : "Portal temporarily unavailable"}</h1><p>This customer portal is currently unavailable for the selected organization.</p></section></main></>;
+  return <><PortalHeader hasMultipleAccounts={context.links.length > 1} /><main>{children}</main></>;
+}
